@@ -1,65 +1,166 @@
-import Image from "next/image";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-black text-white">
+      <Navbar />
+
+      <section className="relative min-h-[92vh] overflow-hidden">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover brightness-110 contrast-110"
+        >
+          <source src="/advert.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+
+        <div className="absolute inset-0 bg-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10" />
+
+        <div className="relative z-10 mx-auto flex min-h-[92vh] max-w-7xl items-center px-6">
+          <div className="max-w-3xl">
+            <span className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-gray-100 backdrop-blur-sm">
+              Trusted mobility for every journey
+            </span>
+
+            <h1 className="mt-6 text-5xl font-extrabold leading-tight md:text-7xl">
+              Drive in style with{" "}
+              <span className="text-yellow-400">Adinkra Drive</span>
+            </h1>
+
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-gray-200 md:text-xl">
+              Explore quality vehicles for rent and purchase. Whether you need a
+              car for a short trip, business use, or long-term ownership, we
+              make the process simple, elegant, and reliable.
+            </p>
+
+            <div className="mt-10 flex flex-wrap gap-4">
+              <a
+                href="/rent"
+                className="rounded-full bg-yellow-400 px-6 py-3 font-semibold text-black transition hover:bg-yellow-300"
+              >
+                Browse Rentals
+              </a>
+
+              <a
+                href="/buy"
+                className="rounded-full border border-white/25 bg-white/10 px-6 py-3 font-semibold text-white transition hover:bg-white hover:text-black"
+              >
+                Browse Cars for Sale
+              </a>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <section className="bg-white text-gray-900">
+        <div className="mx-auto max-w-7xl px-6 py-20">
+          <div className="grid gap-8 md:grid-cols-3">
+            <div className="rounded-3xl border border-gray-200 bg-gray-50 p-6 shadow-sm">
+              <p className="text-sm font-semibold uppercase tracking-widest text-gray-500">
+                Premium Rentals
+              </p>
+              <h3 className="mt-3 text-2xl font-bold">Flexible options</h3>
+              <p className="mt-3 text-gray-600">
+                Choose vehicles for business trips, family outings, airport
+                pickups, and executive comfort.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-gray-200 bg-gray-50 p-6 shadow-sm">
+              <p className="text-sm font-semibold uppercase tracking-widest text-gray-500">
+                Vehicle Sales
+              </p>
+              <h3 className="mt-3 text-2xl font-bold">Own with confidence</h3>
+              <p className="mt-3 text-gray-600">
+                Browse quality vehicles available for purchase with clear
+                availability and trusted details.
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-gray-200 bg-gray-50 p-6 shadow-sm">
+              <p className="text-sm font-semibold uppercase tracking-widest text-gray-500">
+                Trusted Service
+              </p>
+              <h3 className="mt-3 text-2xl font-bold">Simple process</h3>
+              <p className="mt-3 text-gray-600">
+                From first inquiry to final handover, Adinkra Drive keeps the
+                experience smooth, premium, and reliable.
+              </p>
+            </div>
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section id="contact" className="bg-gray-50 text-gray-900">
+        <div className="mx-auto max-w-7xl px-6 py-20">
+          <div className="grid gap-10 md:grid-cols-2">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-widest text-gray-500">
+                Contact Us
+              </p>
+              <h2 className="mt-2 text-3xl font-bold md:text-4xl">
+                Let’s get you on the road
+              </h2>
+              <p className="mt-4 text-gray-600">
+                Reach out for rentals, purchases, fleet inquiries, and special
+                requests.
+              </p>
+
+              <div className="mt-8 space-y-4 text-gray-700">
+                <p>
+                  <span className="font-semibold">Phone:</span> +233 XX XXX XXXX
+                </p>
+                <p>
+                  <span className="font-semibold">Email:</span>{" "}
+                  info@adinkradrive.com
+                </p>
+                <p>
+                  <span className="font-semibold">Location:</span> Accra, Ghana
+                </p>
+              </div>
+            </div>
+
+            <form className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+              <div className="grid gap-4">
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  className="rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                />
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  className="rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                />
+                <input
+                  type="text"
+                  placeholder="Phone Number"
+                  className="rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                />
+                <textarea
+                  placeholder="Tell us what you need..."
+                  rows={5}
+                  className="rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                />
+                <button
+                  type="submit"
+                  className="rounded-xl bg-black px-5 py-3 font-semibold text-white transition hover:opacity-90"
+                >
+                  Send Message
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </main>
   );
 }
