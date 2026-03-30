@@ -20,10 +20,10 @@ export default function Footer() {
               <p>📍 Accra, Ghana</p>
 
               <a
-                href="tel:+233XXXXXXXXX"
+                href="tel:+233544239772"
                 className="block hover:text-yellow-400"
               >
-                📞 +233 XX XXX XXXX
+                📞 +233 (0)544239772
               </a>
 
               <a
@@ -34,7 +34,7 @@ export default function Footer() {
               </a>
 
               <a
-                href="https://wa.me/233XXXXXXXXX"
+                href="https://wa.me/233544239972"
                 target="_blank"
                 className="block hover:text-green-400"
               >

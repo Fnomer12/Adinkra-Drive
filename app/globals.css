@@ -1,26 +1,57 @@
 @import "tailwindcss";
 
+/* =========================
+   ROOT THEME (LIGHT)
+========================= */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --background: #f9fafb; /* softer than pure white */
+  --foreground: #0f172a; /* slate-900 for premium look */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+/* =========================
+   DARK MODE (AUTO)
+========================= */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0b0f19;
+    --foreground: #e5e7eb;
   }
 }
 
+/* =========================
+   BASE STYLES
+========================= */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+@keyframes arrowMove {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-6px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* default animation */
+.animate-arrow {
+  animation: arrowMove 1.2s ease-in-out infinite;
+}
+
+/* faster on hover */
+button:hover .animate-arrow {
+  animation: arrowMove 0.5s ease-in-out infinite;
 }
