@@ -52,7 +52,7 @@ type VehicleFormState = {
 
 type Employee = {
   id: string;
-  name: string;
+  full_name: string;
   role: EmployeeRole;
   phone: string;
   email: string;
@@ -118,6 +118,14 @@ const emptyEmployeeForm: EmployeeFormState = {
   status: "active",
 };
 
+const cardClass =
+  "rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900";
+const inputClass =
+  "w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-black dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-white";
+const selectClass =
+  "w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-black dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-white";
+const smallStatClass = "rounded-2xl bg-gray-50 p-4 dark:bg-gray-800";
+
 function todayDateString() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -127,6 +135,363 @@ function generateMapEmbedUrl(lat?: number, lng?: number) {
   const finalLng = lng ?? -0.187;
   return `https://maps.google.com/maps?q=${finalLat},${finalLng}&z=13&output=embed`;
 }
+
+// Translation
+const translations = {
+  English: {
+    adminDashboard: "Admin Dashboard",
+    vehiclesTitle: "Vehicle Management",
+    vehiclesDesc: "Add, edit, update, and manage your full vehicle inventory.",
+    gpsTitle: "GPS Map",
+    gpsDesc: "Track your active rental operations with a map view.",
+    employeesTitle: "Employee Management",
+    employeesDesc: "Add employees and manage staff records from the database.",
+    attendanceTitle: "Staff Attendance",
+    attendanceDesc: "View and update attendance records stored in the database.",
+    membersTitle: "Registered Members",
+    membersDesc: "View members who joined today and all registered members.",
+    settingsTitle: "Settings",
+    settingsDesc: "Manage theme and language only.",
+
+    addVehicle: "Add Vehicle",
+    editVehicle: "Edit Vehicle",
+    vehicleInventory: "Vehicle Inventory",
+    cancel: "Cancel",
+    rent: "Rent",
+    sale: "Sale",
+    available: "Available",
+    inUse: "In Use",
+    purchased: "Purchased",
+    brand: "Brand",
+    model: "Model",
+    year: "Year",
+    price: "Price",
+    seats: "Seats",
+    transmission: "Transmission",
+    fuelType: "Fuel Type",
+    vehicleDescription: "Vehicle Description",
+    uploadImage: "Upload Image",
+    uploadNewImageOptional: "Upload New Image (optional)",
+    currentImage: "Current Image",
+    removeCurrentImage: "Remove current image",
+    all: "All",
+    category: "Category",
+    edit: "Edit",
+    delete: "Delete",
+
+    gpsOverview: "GPS Overview",
+    rentalVehicles: "Rental Vehicles",
+    currentlyInUse: "Currently In Use",
+    map: "Map",
+
+    addEmployee: "Add Employee",
+    employeeList: "Employee List",
+    fullName: "Full Name",
+    phoneNumber: "Phone Number",
+    emailAddress: "Email Address",
+    active: "Active",
+    offDuty: "Off Duty",
+    removeEmployee: "Remove Employee",
+
+    attendanceSummary: "Attendance Summary",
+    markAttendance: "Mark Attendance",
+    present: "Present",
+    late: "Late",
+    absent: "Absent",
+    off: "Off",
+
+    allMembers: "All Members",
+    name: "Name",
+    email: "Email",
+    phone: "Phone",
+    consent: "Consent",
+    status: "Status",
+    registered: "Registered",
+    granted: "Granted",
+    no: "No",
+    inactive: "Inactive",
+
+    dashboardSettings: "Dashboard Settings",
+    currentSettings: "Current Settings",
+    theme: "Theme",
+    language: "Language",
+    light: "Light",
+    dark: "Dark",
+    saveSettings: "Save Settings",
+
+    memberNotifications: "Member Notifications",
+    joinedToday: "Joined Today",
+    joinedThisWeek: "Joined This Week",
+    noPhoneNumber: "No phone number",
+    noNewMemberRegistrations: "No new member registrations this week.",
+
+    loggedOut: "Log out",
+    settingsUpdatedSuccessfully: "Settings updated successfully.",
+    attendanceUpdated: "Attendance updated.",
+    employeeAddedSuccessfully: "Employee added successfully.",
+    employeeRemovedSuccessfully: "Employee removed successfully.",
+    vehicleUpdatedSuccessfully: "Vehicle updated successfully.",
+    vehicleDeletedSuccessfully: "Vehicle deleted successfully.",
+    vehicleAddedSuccessfully: "Vehicle added successfully and members notified.",
+
+    failedToLoadEmployees: "Failed to load employees.",
+    failedToLoadAttendance: "Failed to load attendance data.",
+    failedToLoadMembers: "Failed to load members from Supabase.",
+    failedToLoadSettings: "Failed to load settings.",
+    failedToLoadVehicles: "Could not load vehicles from Supabase.",
+    noEmployeesAddedYet: "No employees added yet.",
+    noEmployeesAvailable: "No employees available for attendance.",
+    noRegisteredMembers: "No registered members found.",
+    noVehiclesFound: "No vehicles found.",
+
+    completeVehicleFields: "Please complete all required vehicle fields.",
+    uploadVehicleImage: "Please upload a vehicle image.",
+    completeEmployeeFields: "Please complete all required employee fields.",
+    failedToAddEmployee: "Failed to add employee.",
+    failedToRemoveEmployee: "Failed to remove employee.",
+    failedToUpdateAttendance: "Failed to update attendance.",
+    failedToDeleteVehicle: "Failed to delete vehicle.",
+    failedToUpdateSettings: "Failed to update settings.",
+    failedToSaveVehicle: "Something went wrong while saving the vehicle.",
+    deleteVehicleConfirm: "Delete this vehicle permanently?",
+  },
+
+  French: {
+    adminDashboard: "Tableau de bord admin",
+    vehiclesTitle: "Gestion des véhicules",
+    vehiclesDesc: "Ajoutez, modifiez et gérez tout votre inventaire de véhicules.",
+    gpsTitle: "Carte GPS",
+    gpsDesc: "Suivez vos locations actives avec une vue carte.",
+    employeesTitle: "Gestion des employés",
+    employeesDesc: "Ajoutez des employés et gérez leurs dossiers depuis la base de données.",
+    attendanceTitle: "Présence du personnel",
+    attendanceDesc: "Consultez et mettez à jour les présences enregistrées.",
+    membersTitle: "Membres enregistrés",
+    membersDesc: "Consultez les membres inscrits aujourd’hui et tous les membres.",
+    settingsTitle: "Paramètres",
+    settingsDesc: "Gérez uniquement le thème et la langue.",
+
+    addVehicle: "Ajouter un véhicule",
+    editVehicle: "Modifier le véhicule",
+    vehicleInventory: "Inventaire des véhicules",
+    cancel: "Annuler",
+    rent: "Location",
+    sale: "Vente",
+    available: "Disponible",
+    inUse: "En cours d'utilisation",
+    purchased: "Acheté",
+    brand: "Marque",
+    model: "Modèle",
+    year: "Année",
+    price: "Prix",
+    seats: "Places",
+    transmission: "Transmission",
+    fuelType: "Type de carburant",
+    vehicleDescription: "Description du véhicule",
+    uploadImage: "Téléverser une image",
+    uploadNewImageOptional: "Téléverser une nouvelle image (facultatif)",
+    currentImage: "Image actuelle",
+    removeCurrentImage: "Supprimer l’image actuelle",
+    all: "Tous",
+    category: "Catégorie",
+    edit: "Modifier",
+    delete: "Supprimer",
+
+    gpsOverview: "Aperçu GPS",
+    rentalVehicles: "Véhicules en location",
+    currentlyInUse: "Actuellement utilisés",
+    map: "Carte",
+
+    addEmployee: "Ajouter un employé",
+    employeeList: "Liste des employés",
+    fullName: "Nom complet",
+    phoneNumber: "Numéro de téléphone",
+    emailAddress: "Adresse e-mail",
+    active: "Actif",
+    offDuty: "Hors service",
+    removeEmployee: "Supprimer l’employé",
+
+    attendanceSummary: "Résumé des présences",
+    markAttendance: "Marquer la présence",
+    present: "Présent",
+    late: "En retard",
+    absent: "Absent",
+    off: "Repos",
+
+    allMembers: "Tous les membres",
+    name: "Nom",
+    email: "E-mail",
+    phone: "Téléphone",
+    consent: "Consentement",
+    status: "Statut",
+    registered: "Enregistré",
+    granted: "Accordé",
+    no: "Non",
+    inactive: "Inactif",
+
+    dashboardSettings: "Paramètres du tableau de bord",
+    currentSettings: "Paramètres actuels",
+    theme: "Thème",
+    language: "Langue",
+    light: "Clair",
+    dark: "Sombre",
+    saveSettings: "Enregistrer les paramètres",
+
+    memberNotifications: "Notifications des membres",
+    joinedToday: "Inscrits aujourd’hui",
+    joinedThisWeek: "Inscrits cette semaine",
+    noPhoneNumber: "Aucun numéro",
+    noNewMemberRegistrations: "Aucune nouvelle inscription cette semaine.",
+
+    loggedOut: "Déconnecté.",
+    settingsUpdatedSuccessfully: "Paramètres mis à jour avec succès.",
+    attendanceUpdated: "Présence mise à jour.",
+    employeeAddedSuccessfully: "Employé ajouté avec succès.",
+    employeeRemovedSuccessfully: "Employé supprimé avec succès.",
+    vehicleUpdatedSuccessfully: "Véhicule mis à jour avec succès.",
+    vehicleDeletedSuccessfully: "Véhicule supprimé avec succès.",
+    vehicleAddedSuccessfully: "Véhicule ajouté avec succès et membres notifiés.",
+
+    failedToLoadEmployees: "Échec du chargement des employés.",
+    failedToLoadAttendance: "Échec du chargement des données de présence.",
+    failedToLoadMembers: "Échec du chargement des membres depuis Supabase.",
+    failedToLoadSettings: "Échec du chargement des paramètres.",
+    failedToLoadVehicles: "Impossible de charger les véhicules depuis Supabase.",
+    noEmployeesAddedYet: "Aucun employé ajouté pour le moment.",
+    noEmployeesAvailable: "Aucun employé disponible pour la présence.",
+    noRegisteredMembers: "Aucun membre enregistré trouvé.",
+    noVehiclesFound: "Aucun véhicule trouvé.",
+
+    completeVehicleFields: "Veuillez remplir tous les champs requis du véhicule.",
+    uploadVehicleImage: "Veuillez téléverser une image du véhicule.",
+    completeEmployeeFields: "Veuillez remplir tous les champs requis de l’employé.",
+    failedToAddEmployee: "Échec de l’ajout de l’employé.",
+    failedToRemoveEmployee: "Échec de la suppression de l’employé.",
+    failedToUpdateAttendance: "Échec de la mise à jour de la présence.",
+    failedToDeleteVehicle: "Échec de la suppression du véhicule.",
+    failedToUpdateSettings: "Échec de la mise à jour des paramètres.",
+    failedToSaveVehicle: "Une erreur s’est produite lors de l’enregistrement du véhicule.",
+    deleteVehicleConfirm: "Supprimer définitivement ce véhicule ?",
+  },
+
+  Spanish: {
+    adminDashboard: "Panel de administración",
+    vehiclesTitle: "Gestión de vehículos",
+    vehiclesDesc: "Agrega, edita, actualiza y gestiona todo tu inventario de vehículos.",
+    gpsTitle: "Mapa GPS",
+    gpsDesc: "Sigue tus operaciones activas de alquiler con una vista de mapa.",
+    employeesTitle: "Gestión de empleados",
+    employeesDesc: "Agrega empleados y gestiona sus registros desde la base de datos.",
+    attendanceTitle: "Asistencia del personal",
+    attendanceDesc: "Consulta y actualiza los registros de asistencia almacenados.",
+    membersTitle: "Miembros registrados",
+    membersDesc: "Consulta los miembros que se unieron hoy y todos los registrados.",
+    settingsTitle: "Configuración",
+    settingsDesc: "Gestiona solo el tema y el idioma.",
+
+    addVehicle: "Agregar vehículo",
+    editVehicle: "Editar vehículo",
+    vehicleInventory: "Inventario de vehículos",
+    cancel: "Cancelar",
+    rent: "Alquiler",
+    sale: "Venta",
+    available: "Disponible",
+    inUse: "En uso",
+    purchased: "Comprado",
+    brand: "Marca",
+    model: "Modelo",
+    year: "Año",
+    price: "Precio",
+    seats: "Asientos",
+    transmission: "Transmisión",
+    fuelType: "Tipo de combustible",
+    vehicleDescription: "Descripción del vehículo",
+    uploadImage: "Subir imagen",
+    uploadNewImageOptional: "Subir nueva imagen (opcional)",
+    currentImage: "Imagen actual",
+    removeCurrentImage: "Eliminar imagen actual",
+    all: "Todos",
+    category: "Categoría",
+    edit: "Editar",
+    delete: "Eliminar",
+
+    gpsOverview: "Resumen GPS",
+    rentalVehicles: "Vehículos en alquiler",
+    currentlyInUse: "Actualmente en uso",
+    map: "Mapa",
+
+    addEmployee: "Agregar empleado",
+    employeeList: "Lista de empleados",
+    fullName: "Nombre completo",
+    phoneNumber: "Número de teléfono",
+    emailAddress: "Correo electrónico",
+    active: "Activo",
+    offDuty: "Fuera de servicio",
+    removeEmployee: "Eliminar empleado",
+
+    attendanceSummary: "Resumen de asistencia",
+    markAttendance: "Marcar asistencia",
+    present: "Presente",
+    late: "Tarde",
+    absent: "Ausente",
+    off: "Libre",
+
+    allMembers: "Todos los miembros",
+    name: "Nombre",
+    email: "Correo",
+    phone: "Teléfono",
+    consent: "Consentimiento",
+    status: "Estado",
+    registered: "Registrado",
+    granted: "Concedido",
+    no: "No",
+    inactive: "Inactivo",
+
+    dashboardSettings: "Configuración del panel",
+    currentSettings: "Configuración actual",
+    theme: "Tema",
+    language: "Idioma",
+    light: "Claro",
+    dark: "Oscuro",
+    saveSettings: "Guardar configuración",
+
+    memberNotifications: "Notificaciones de miembros",
+    joinedToday: "Unidos hoy",
+    joinedThisWeek: "Unidos esta semana",
+    noPhoneNumber: "Sin número de teléfono",
+    noNewMemberRegistrations: "No hay nuevos registros de miembros esta semana.",
+
+    loggedOut: "Sesión cerrada.",
+    settingsUpdatedSuccessfully: "Configuración actualizada correctamente.",
+    attendanceUpdated: "Asistencia actualizada.",
+    employeeAddedSuccessfully: "Empleado agregado correctamente.",
+    employeeRemovedSuccessfully: "Empleado eliminado correctamente.",
+    vehicleUpdatedSuccessfully: "Vehículo actualizado correctamente.",
+    vehicleDeletedSuccessfully: "Vehículo eliminado correctamente.",
+    vehicleAddedSuccessfully: "Vehículo agregado correctamente y miembros notificados.",
+
+    failedToLoadEmployees: "No se pudieron cargar los empleados.",
+    failedToLoadAttendance: "No se pudieron cargar los datos de asistencia.",
+    failedToLoadMembers: "No se pudieron cargar los miembros desde Supabase.",
+    failedToLoadSettings: "No se pudieron cargar los ajustes.",
+    failedToLoadVehicles: "No se pudieron cargar los vehículos desde Supabase.",
+    noEmployeesAddedYet: "Aún no se han agregado empleados.",
+    noEmployeesAvailable: "No hay empleados disponibles para asistencia.",
+    noRegisteredMembers: "No se encontraron miembros registrados.",
+    noVehiclesFound: "No se encontraron vehículos.",
+
+    completeVehicleFields: "Por favor completa todos los campos requeridos del vehículo.",
+    uploadVehicleImage: "Por favor sube una imagen del vehículo.",
+    completeEmployeeFields: "Por favor completa todos los campos requeridos del empleado.",
+    failedToAddEmployee: "No se pudo agregar el empleado.",
+    failedToRemoveEmployee: "No se pudo eliminar el empleado.",
+    failedToUpdateAttendance: "No se pudo actualizar la asistencia.",
+    failedToDeleteVehicle: "No se pudo eliminar el vehículo.",
+    failedToUpdateSettings: "No se pudo actualizar la configuración.",
+    failedToSaveVehicle: "Algo salió mal al guardar el vehículo.",
+    deleteVehicleConfirm: "¿Eliminar este vehículo permanentemente?",
+  },
+} as const;
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>("vehicles");
@@ -144,6 +509,9 @@ export default function AdminPage() {
     theme: "light",
     language: "English",
   });
+
+  // ✅ ADD THIS LINE RIGHT HERE
+  const t = translations[settings.language];
 
   const [vehicleLoadFailed, setVehicleLoadFailed] = useState(false);
   const [employeesLoadFailed, setEmployeesLoadFailed] = useState(false);
@@ -173,6 +541,15 @@ export default function AdminPage() {
   useEffect(() => {
     void loadAllData();
   }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [settings.theme]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -338,10 +715,7 @@ export default function AdminPage() {
 
       if (error) throw error;
 
-      if (data) {
-        setSettings(data as AppSetting);
-      }
-
+      if (data) setSettings(data as AppSetting);
       setSettingsLoadFailed(false);
     } catch (error) {
       console.error("Load settings error:", error);
@@ -368,7 +742,6 @@ export default function AdminPage() {
 
   function handleSettingChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const { name, value } = e.target;
-
     setSettings((prev) => ({
       ...prev,
       [name]:
@@ -504,66 +877,54 @@ export default function AdminPage() {
       };
 
       if (vehicleEditingId) {
-  const { error } = await supabase
-    .from("vehicles")
-    .update(payload)
-    .eq("id", vehicleEditingId);
+        const { error } = await supabase
+          .from("vehicles")
+          .update(payload)
+          .eq("id", vehicleEditingId);
 
-  if (error) {
-    console.error("Vehicles update error:", error);
-    throw error;
-  }
+        if (error) throw error;
+        setMessage(t.vehicleUpdatedSuccessfully);
+      } else {
+        const { data, error } = await supabase
+          .from("vehicles")
+          .insert(payload)
+          .select()
+          .single();
 
-  setMessage("Vehicle updated successfully.");
-} else {
-  const { data, error } = await supabase
-    .from("vehicles")
-    .insert(payload)
-    .select()
-    .single();
+        if (error) throw error;
 
-  if (error) {
-    console.error("Vehicles insert error:", error);
-    throw error;
-  }
+        try {
+          await fetch("/api/notify-members", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              vehicle: {
+                title: data.title,
+                brand: data.brand,
+                model: data.model,
+                year: data.year,
+                category: data.category,
+                price: data.price,
+                description: data.description,
+                image_url: data.image_url,
+              },
+            }),
+          });
+        } catch (notifyError) {
+          console.error("Notification error:", notifyError);
+        }
 
-  try {
-    await fetch("/api/notify-members", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        vehicle: {
-          title: data.title,
-          brand: data.brand,
-          model: data.model,
-          year: data.year,
-          category: data.category,
-          price: data.price,
-          description: data.description,
-          image_url: data.image_url,
-        },
-      }),
-    });
-  } catch (notifyError) {
-    console.error("Notification error:", notifyError);
-  }
-
-  setMessage("Vehicle added successfully and members notified.");
-}
+        setMessage(t.vehicleAddedSuccessfully);
+      }
 
       await loadVehicles();
       resetVehicleForm();
     } catch (error: any) {
-  console.error("Vehicle submit full error:", error);
-  console.error("Message:", error?.message);
-  console.error("Details:", error?.details);
-  console.error("Hint:", error?.hint);
-  console.error("Code:", error?.code);
-
-  setMessage(error?.message || "Something went wrong while saving the vehicle.");
-} finally {
-  setLoading(false);
-}
+      console.error("Vehicle submit error:", error);
+      setMessage(error?.message || "Something went wrong while saving the vehicle.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleVehicleEdit(vehicle: Vehicle) {
@@ -594,7 +955,7 @@ export default function AdminPage() {
   }
 
   async function handleVehicleDelete(vehicle: Vehicle) {
-    const ok = window.confirm("Delete this vehicle permanently?");
+    const ok = window.confirm(t.deleteVehicleConfirm);
     if (!ok) return;
 
     setLoading(true);
@@ -615,12 +976,10 @@ export default function AdminPage() {
 
       if (error) throw error;
 
-      if (vehicleEditingId === vehicle.id) {
-        resetVehicleForm();
-      }
+      if (vehicleEditingId === vehicle.id) resetVehicleForm();
 
       await loadVehicles();
-      setMessage("Vehicle deleted successfully.");
+      setMessage(t.vehicleDeletedSuccessfully);
     } catch (error) {
       console.error("Vehicle delete error:", error);
       setMessage("Failed to delete vehicle.");
@@ -639,7 +998,7 @@ export default function AdminPage() {
 
     try {
       const payload = {
-        name: employeeForm.name.trim(),
+        full_name: employeeForm.name.trim(),
         role: employeeForm.role,
         phone: employeeForm.phone.trim(),
         email: employeeForm.email.trim().toLowerCase(),
@@ -651,7 +1010,7 @@ export default function AdminPage() {
 
       setEmployeeForm(emptyEmployeeForm);
       await loadEmployees();
-      setMessage("Employee added successfully.");
+      setMessage(t.employeeAddedSuccessfully);
     } catch (error) {
       console.error("Employee submit error:", error);
       setMessage("Failed to add employee.");
@@ -674,7 +1033,7 @@ export default function AdminPage() {
 
       await loadEmployees();
       await loadAttendance();
-      setMessage("Employee removed successfully.");
+      setMessage(t.employeeRemovedSuccessfully);
     } catch (error) {
       console.error("Employee delete error:", error);
       setMessage("Failed to remove employee.");
@@ -701,7 +1060,7 @@ export default function AdminPage() {
       if (error) throw error;
 
       await loadAttendance();
-      setMessage("Attendance updated.");
+      setMessage(t.attendanceUpdated);
     } catch (error) {
       console.error("Attendance update error:", error);
       setMessage("Failed to update attendance.");
@@ -726,7 +1085,7 @@ export default function AdminPage() {
       if (error) throw error;
 
       await loadSettings();
-      setMessage("Settings updated successfully.");
+      setMessage(t.settingsUpdatedSuccessfully);
     } catch (error) {
       console.error("Settings save error:", error);
       setMessage("Failed to update settings.");
@@ -735,27 +1094,33 @@ export default function AdminPage() {
     }
   }
 
-  function handleLogout() {
-    setMessage("Logged out.");
+  async function handleLogout() {
+  try {
+    await fetch("/api/admin/logout", { method: "POST" });
+    window.location.href = "/admin/login";
+  } catch (error) {
+    console.error("Logout error:", error);
+    setMessage("Failed to logout.");
   }
+}
 
   const titleMap: Record<AdminTab, string> = {
-    vehicles: "Vehicle Management",
-    gps: "GPS Map",
-    employees: "Employee Management",
-    attendance: "Staff Attendance",
-    members: "Registered Members",
-    settings: "Settings",
-  };
+  vehicles: t.vehiclesTitle,
+  gps: t.gpsTitle,
+  employees: t.employeesTitle,
+  attendance: t.attendanceTitle,
+  members: t.membersTitle,
+  settings: t.settingsTitle,
+};
 
-  const descriptionMap: Record<AdminTab, string> = {
-    vehicles: "Add, edit, update, and manage your full vehicle inventory.",
-    gps: "Track your active rental operations with a map view.",
-    employees: "Add employees and manage staff records from the database.",
-    attendance: "View and update attendance records stored in the database.",
-    members: "View members who joined today and all registered members.",
-    settings: "Manage theme and language only.",
-  };
+const descriptionMap: Record<AdminTab, string> = {
+  vehicles: t.vehiclesDesc,
+  gps: t.gpsDesc,
+  employees: t.employeesDesc,
+  attendance: t.attendanceDesc,
+  members: t.membersDesc,
+  settings: t.settingsDesc,
+};
 
   function statusLabel(status: VehicleStatus) {
     if (status === "in_use") return "In Use";
@@ -778,16 +1143,16 @@ export default function AdminPage() {
 
   function renderHeader() {
     return (
-      <div className="mb-8 rounded-3xl bg-white px-6 py-8 shadow-sm">
+      <div className={`${cardClass} mb-8`}>
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-gray-500">
-              Admin Dashboard
+            <p className="text-sm uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">
+              {t.adminDashboard}
             </p>
-            <h1 className="mt-2 text-3xl font-bold text-gray-900 md:text-4xl">
+            <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
               {titleMap[activeTab]}
             </h1>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               {descriptionMap[activeTab]}
             </p>
           </div>
@@ -796,7 +1161,7 @@ export default function AdminPage() {
             <button
               type="button"
               onClick={() => setNotificationsOpen((prev) => !prev)}
-              className="relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700 shadow-sm hover:bg-gray-100"
+              className="relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700 shadow-sm hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
             >
               <Bell size={20} />
               {weeklyMemberCount > 0 && (
@@ -807,30 +1172,30 @@ export default function AdminPage() {
             </button>
 
             {notificationsOpen && (
-              <div className="absolute right-0 z-30 mt-3 w-[360px] rounded-3xl border border-gray-200 bg-white p-4 shadow-xl">
+              <div className="absolute right-0 z-30 mt-3 w-[360px] rounded-3xl border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-700 dark:bg-gray-900">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-gray-900">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                     Member Notifications
                   </h3>
                   <button
                     type="button"
                     onClick={() => setNotificationsOpen(false)}
-                    className="rounded-full p-1 text-gray-500 hover:bg-gray-100"
+                    className="rounded-full p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
                   >
                     <X size={18} />
                   </button>
                 </div>
 
                 <div className="mb-4 grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl bg-gray-50 p-3">
-                    <p className="text-xs text-gray-500">Joined Today</p>
-                    <p className="mt-1 text-2xl font-bold text-gray-900">
+                  <div className={`${smallStatClass} p-3`}>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Joined Today</p>
+                    <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
                       {todayMemberCount}
                     </p>
                   </div>
-                  <div className="rounded-2xl bg-gray-50 p-3">
-                    <p className="text-xs text-gray-500">Joined This Week</p>
-                    <p className="mt-1 text-2xl font-bold text-gray-900">
+                  <div className={`${smallStatClass} p-3`}>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Joined This Week</p>
+                    <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
                       {weeklyMemberCount}
                     </p>
                   </div>
@@ -838,23 +1203,23 @@ export default function AdminPage() {
 
                 <div className="max-h-80 space-y-3 overflow-y-auto">
                   {membersThisWeek.length === 0 ? (
-                    <div className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-500">
+                    <div className={`${smallStatClass} text-sm text-gray-500 dark:text-gray-400`}>
                       No new member registrations this week.
                     </div>
                   ) : (
                     membersThisWeek.map((member) => (
                       <div
                         key={member.id}
-                        className="rounded-2xl border border-gray-200 bg-gray-50 p-3"
+                        className="rounded-2xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800"
                       >
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold text-gray-900 dark:text-white">
                           {member.full_name}
                         </p>
-                        <p className="text-sm text-gray-600">{member.email}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-600 dark:text-gray-300">{member.email}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           {member.phone || "No phone number"}
                         </p>
-                        <p className="mt-1 text-xs text-gray-400">
+                        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
                           {new Date(member.created_at).toLocaleString()}
                         </p>
                       </div>
@@ -871,18 +1236,18 @@ export default function AdminPage() {
 
   function renderVehiclesTab() {
     return (
-      <div className="grid gap-8 xl:grid-cols-[420px_1fr]">
-        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="grid items-start gap-8 xl:grid-cols-[420px_1fr]">
+        <section className={cardClass}>
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-2xl font-bold">
-              {vehicleEditingId ? "Edit Vehicle" : "Add Vehicle"}
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {vehicleEditingId ? t.editVehicle : t.addVehicle}
             </h2>
 
             {vehicleEditingId && (
               <button
                 type="button"
                 onClick={resetVehicleForm}
-                className="rounded-full border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-100"
+                className="rounded-full border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
               >
                 Cancel
               </button>
@@ -895,7 +1260,7 @@ export default function AdminPage() {
               value={vehicleForm.title}
               onChange={handleVehicleChange}
               placeholder="Vehicle Title"
-              className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+              className={inputClass}
             />
 
             <div className="grid grid-cols-2 gap-4">
@@ -903,21 +1268,21 @@ export default function AdminPage() {
                 name="category"
                 value={vehicleForm.category}
                 onChange={handleVehicleChange}
-                className="rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                className={selectClass}
               >
-                <option value="rent">Rent</option>
-                <option value="sale">Sale</option>
+                <option value="rent">{t.rent}</option>
+                <option value="sale">{t.sale}</option>
               </select>
 
               <select
                 name="status"
                 value={vehicleForm.status}
                 onChange={handleVehicleChange}
-                className="rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                className={selectClass}
               >
-                <option value="available">Available</option>
-                <option value="in_use">In Use</option>
-                <option value="purchased">Purchased</option>
+                <option value="available">{t.available}</option>
+                <option value="in_use">{t.inUse}</option>
+                <option value="purchased">{t.purchased}</option>
               </select>
             </div>
 
@@ -926,15 +1291,15 @@ export default function AdminPage() {
                 name="brand"
                 value={vehicleForm.brand}
                 onChange={handleVehicleChange}
-                placeholder="Brand"
-                className="rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                placeholder={t.brand}
+                className={inputClass}
               />
               <input
                 name="model"
                 value={vehicleForm.model}
                 onChange={handleVehicleChange}
-                placeholder="Model"
-                className="rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                placeholder={t.model}
+                className={inputClass}
               />
             </div>
 
@@ -944,24 +1309,24 @@ export default function AdminPage() {
                 type="number"
                 value={vehicleForm.year}
                 onChange={handleVehicleChange}
-                placeholder="Year"
-                className="rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                placeholder={t.year}
+                className={inputClass}
               />
               <input
                 name="price"
                 type="number"
                 value={vehicleForm.price}
                 onChange={handleVehicleChange}
-                placeholder="Price"
-                className="rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                placeholder={t.price}
+                className={inputClass}
               />
               <input
                 name="seats"
                 type="number"
                 value={vehicleForm.seats}
                 onChange={handleVehicleChange}
-                placeholder="Seats"
-                className="rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                placeholder={t.seats}
+                className={inputClass}
               />
             </div>
 
@@ -970,15 +1335,15 @@ export default function AdminPage() {
                 name="transmission"
                 value={vehicleForm.transmission}
                 onChange={handleVehicleChange}
-                placeholder="Transmission"
-                className="rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                placeholder={t.transmission}
+                className={inputClass}
               />
               <input
                 name="fuel_type"
                 value={vehicleForm.fuel_type}
                 onChange={handleVehicleChange}
-                placeholder="Fuel Type"
-                className="rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                placeholder={t.fuelType}
+                className={inputClass}
               />
             </div>
 
@@ -986,14 +1351,14 @@ export default function AdminPage() {
               name="description"
               value={vehicleForm.description}
               onChange={handleVehicleChange}
-              placeholder="Vehicle Description"
+              placeholder={t.vehicleDescription}
               rows={4}
-              className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+              className={inputClass}
             />
 
             {existingImageUrl && !removeCurrentImage && (
-              <div className="rounded-2xl border border-gray-200 p-3">
-                <p className="mb-2 text-sm font-medium text-gray-700">
+              <div className="rounded-2xl border border-gray-200 p-3 dark:border-gray-700">
+                <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   Current Image
                 </p>
                 <img
@@ -1001,7 +1366,7 @@ export default function AdminPage() {
                   alt="Current vehicle"
                   className="h-40 w-full rounded-2xl object-cover"
                 />
-                <label className="mt-3 flex items-center gap-2 text-sm text-gray-700">
+                <label className="mt-3 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                   <input
                     type="checkbox"
                     checked={removeCurrentImage}
@@ -1013,68 +1378,57 @@ export default function AdminPage() {
             )}
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 {vehicleEditingId ? "Upload New Image (optional)" : "Upload Image"}
               </label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                className="w-full rounded-2xl border border-gray-300 px-4 py-3"
+                className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-2xl bg-black px-5 py-3 font-semibold text-white hover:opacity-90 disabled:opacity-60"
+              className="w-full rounded-2xl bg-black px-5 py-3 font-semibold text-white hover:opacity-90 disabled:opacity-60 dark:bg-white dark:text-black"
             >
               {loading ? "Saving..." : vehicleEditingId ? "Update Vehicle" : "Add Vehicle"}
             </button>
           </form>
         </section>
 
-        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+        <section className={cardClass}>
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <h2 className="text-2xl font-bold">Vehicle Inventory</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {t.vehicleInventory}
+            </h2>
 
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setVehicleFilter("all")}
-                className={`rounded-full px-4 py-2 text-sm ${
-                  vehicleFilter === "all" ? "bg-black text-white" : "bg-gray-100"
-                }`}
-              >
-                All
-              </button>
-              <button
-                type="button"
-                onClick={() => setVehicleFilter("rent")}
-                className={`rounded-full px-4 py-2 text-sm ${
-                  vehicleFilter === "rent" ? "bg-black text-white" : "bg-gray-100"
-                }`}
-              >
-                Rent
-              </button>
-              <button
-                type="button"
-                onClick={() => setVehicleFilter("sale")}
-                className={`rounded-full px-4 py-2 text-sm ${
-                  vehicleFilter === "sale" ? "bg-black text-white" : "bg-gray-100"
-                }`}
-              >
-                Sale
-              </button>
+              {(["all", "rent", "sale"] as const).map((filter) => (
+                <button
+                  key={filter}
+                  type="button"
+                  onClick={() => setVehicleFilter(filter)}
+                  className={`rounded-full px-4 py-2 text-sm ${
+                    vehicleFilter === filter
+                      ? "bg-black text-white dark:bg-white dark:text-black"
+                      : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                  }`}
+                >
+                  {filter === "all" ? "All" : filter === "rent" ? "Rent" : "Sale"}
+                </button>
+              ))}
             </div>
           </div>
 
           {vehicleLoadFailed ? (
-            <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-700">
+            <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
               Could not load vehicles from Supabase.
             </div>
           ) : filteredVehicles.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
+            <div className="rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
               No vehicles found.
             </div>
           ) : (
@@ -1082,7 +1436,7 @@ export default function AdminPage() {
               {filteredVehicles.map((vehicle) => (
                 <div
                   key={vehicle.id}
-                  className="overflow-hidden rounded-3xl border border-gray-200 bg-gray-50"
+                  className="overflow-hidden rounded-3xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
                 >
                   <img
                     src={vehicle.image_url || "/placeholder-car.jpg"}
@@ -1093,8 +1447,10 @@ export default function AdminPage() {
                   <div className="p-5">
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div>
-                        <h3 className="text-xl font-bold">{vehicle.title}</h3>
-                        <p className="text-sm text-gray-500">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                          {vehicle.title}
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           {vehicle.brand} • {vehicle.model} • {vehicle.year}
                         </p>
                       </div>
@@ -1108,15 +1464,21 @@ export default function AdminPage() {
                       </span>
                     </div>
 
-                    <p className="mb-4 text-sm text-gray-600">{vehicle.description}</p>
+                    <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
+                      {vehicle.description}
+                    </p>
 
-                    <div className="mb-5 grid grid-cols-2 gap-3 text-sm text-gray-600">
-                      <div className="rounded-2xl bg-white p-3">
-                        <span className="block text-xs text-gray-400">Category</span>
+                    <div className="mb-5 grid grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-300">
+                      <div className="rounded-2xl bg-white p-3 dark:bg-gray-900">
+                        <span className="block text-xs text-gray-400 dark:text-gray-500">
+                          Category
+                        </span>
                         <span className="font-medium capitalize">{vehicle.category}</span>
                       </div>
-                      <div className="rounded-2xl bg-white p-3">
-                        <span className="block text-xs text-gray-400">Price</span>
+                      <div className="rounded-2xl bg-white p-3 dark:bg-gray-900">
+                        <span className="block text-xs text-gray-400 dark:text-gray-500">
+                          Price
+                        </span>
                         <span className="font-medium">
                           {vehicle.category === "rent"
                             ? `$${vehicle.price}/day`
@@ -1129,14 +1491,14 @@ export default function AdminPage() {
                       <button
                         type="button"
                         onClick={() => handleVehicleEdit(vehicle)}
-                        className="flex-1 rounded-2xl bg-black px-4 py-3 text-sm font-semibold text-white"
+                        className="flex-1 rounded-2xl bg-black px-4 py-3 text-sm font-semibold text-white dark:bg-white dark:text-black"
                       >
                         Edit
                       </button>
                       <button
                         type="button"
                         onClick={() => void handleVehicleDelete(vehicle)}
-                        className="flex-1 rounded-2xl border border-red-300 bg-white px-4 py-3 text-sm font-semibold text-red-600"
+                        className="flex-1 rounded-2xl border border-red-300 bg-white px-4 py-3 text-sm font-semibold text-red-600 dark:border-red-700 dark:bg-gray-900 dark:text-red-400"
                       >
                         Delete
                       </button>
@@ -1154,23 +1516,31 @@ export default function AdminPage() {
   function renderGpsTab() {
     return (
       <div className="grid gap-8 xl:grid-cols-[320px_1fr]">
-        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-bold">GPS Overview</h2>
+        <section className={cardClass}>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            GPS Overview
+          </h2>
           <div className="mt-6 space-y-4">
-            <div className="rounded-2xl bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">Rental Vehicles</p>
-              <p className="mt-1 text-3xl font-bold">{rentedVehicles.length}</p>
+            <div className={smallStatClass}>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Rental Vehicles</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+                {rentedVehicles.length}
+              </p>
             </div>
-            <div className="rounded-2xl bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">Currently In Use</p>
-              <p className="mt-1 text-3xl font-bold">{inUseVehicles.length}</p>
+            <div className={smallStatClass}>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Currently In Use</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+                {inUseVehicles.length}
+              </p>
             </div>
           </div>
         </section>
 
-        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-6 text-2xl font-bold">Map</h2>
-          <div className="overflow-hidden rounded-3xl border border-gray-200">
+        <section className={cardClass}>
+          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white">
+            Map
+          </h2>
+          <div className="overflow-hidden rounded-3xl border border-gray-200 dark:border-gray-700">
             <iframe
               title="GPS Map"
               src={generateMapEmbedUrl()}
@@ -1186,8 +1556,10 @@ export default function AdminPage() {
   function renderEmployeesTab() {
     return (
       <div className="grid gap-8 xl:grid-cols-[380px_1fr]">
-        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-bold">Add Employee</h2>
+        <section className={cardClass}>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Add Employee
+          </h2>
 
           <form onSubmit={handleEmployeeSubmit} className="mt-6 space-y-4">
             <input
@@ -1195,14 +1567,14 @@ export default function AdminPage() {
               value={employeeForm.name}
               onChange={handleEmployeeChange}
               placeholder="Full Name"
-              className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+              className={inputClass}
             />
 
             <select
               name="role"
               value={employeeForm.role}
               onChange={handleEmployeeChange}
-              className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+              className={selectClass}
             >
               <option value="Driver">Driver</option>
               <option value="Operations Manager">Operations Manager</option>
@@ -1217,7 +1589,7 @@ export default function AdminPage() {
               value={employeeForm.phone}
               onChange={handleEmployeeChange}
               placeholder="Phone Number"
-              className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+              className={inputClass}
             />
 
             <input
@@ -1225,14 +1597,14 @@ export default function AdminPage() {
               value={employeeForm.email}
               onChange={handleEmployeeChange}
               placeholder="Email Address"
-              className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+              className={inputClass}
             />
 
             <select
               name="status"
               value={employeeForm.status}
               onChange={handleEmployeeChange}
-              className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+              className={selectClass}
             >
               <option value="active">Active</option>
               <option value="off">Off Duty</option>
@@ -1241,22 +1613,24 @@ export default function AdminPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-2xl bg-black px-5 py-3 font-semibold text-white hover:opacity-90 disabled:opacity-60"
+              className="w-full rounded-2xl bg-black px-5 py-3 font-semibold text-white hover:opacity-90 disabled:opacity-60 dark:bg-white dark:text-black"
             >
               Add Employee
             </button>
           </form>
         </section>
 
-        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-bold">Employee List</h2>
+        <section className={cardClass}>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Employee List
+          </h2>
 
           {employeesLoadFailed ? (
-            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">
+            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
               Failed to load employees.
             </div>
           ) : employees.length === 0 ? (
-            <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
+            <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
               No employees added yet.
             </div>
           ) : (
@@ -1264,12 +1638,16 @@ export default function AdminPage() {
               {employees.map((employee) => (
                 <div
                   key={employee.id}
-                  className="rounded-3xl border border-gray-200 bg-gray-50 p-5"
+                  className="rounded-3xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h3 className="text-lg font-bold">{employee.name}</h3>
-                      <p className="text-sm text-gray-500">{employee.role}</p>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        {employee.full_name}
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {employee.role}
+                      </p>
                     </div>
                     <span
                       className={`rounded-full px-3 py-1 text-xs font-semibold ${
@@ -1282,7 +1660,7 @@ export default function AdminPage() {
                     </span>
                   </div>
 
-                  <div className="mt-4 space-y-2 text-sm text-gray-600">
+                  <div className="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-300">
                     <p>{employee.phone}</p>
                     <p>{employee.email}</p>
                   </div>
@@ -1291,7 +1669,7 @@ export default function AdminPage() {
                     <button
                       type="button"
                       onClick={() => void handleEmployeeDelete(employee.id)}
-                      className="rounded-2xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-600"
+                      className="rounded-2xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-600 dark:border-red-700 dark:bg-gray-900 dark:text-red-400"
                     >
                       Remove Employee
                     </button>
@@ -1308,37 +1686,49 @@ export default function AdminPage() {
   function renderAttendanceTab() {
     return (
       <div className="grid gap-8 xl:grid-cols-[320px_1fr]">
-        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-bold">Attendance Summary</h2>
+        <section className={cardClass}>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Attendance Summary
+          </h2>
           <div className="mt-6 space-y-4">
-            <div className="rounded-2xl bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">Present</p>
-              <p className="mt-1 text-3xl font-bold">{attendanceSummary.present}</p>
+            <div className={smallStatClass}>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Present</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+                {attendanceSummary.present}
+              </p>
             </div>
-            <div className="rounded-2xl bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">Late</p>
-              <p className="mt-1 text-3xl font-bold">{attendanceSummary.late}</p>
+            <div className={smallStatClass}>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Late</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+                {attendanceSummary.late}
+              </p>
             </div>
-            <div className="rounded-2xl bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">Absent</p>
-              <p className="mt-1 text-3xl font-bold">{attendanceSummary.absent}</p>
+            <div className={smallStatClass}>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Absent</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+                {attendanceSummary.absent}
+              </p>
             </div>
-            <div className="rounded-2xl bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">Off</p>
-              <p className="mt-1 text-3xl font-bold">{attendanceSummary.off}</p>
+            <div className={smallStatClass}>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Off</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+                {attendanceSummary.off}
+              </p>
             </div>
           </div>
         </section>
 
-        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-bold">Mark Attendance</h2>
+        <section className={cardClass}>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Mark Attendance
+          </h2>
 
           {attendanceLoadFailed || employeesLoadFailed ? (
-            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">
+            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
               Failed to load attendance data.
             </div>
           ) : employees.length === 0 ? (
-            <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
+            <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
               No employees available for attendance.
             </div>
           ) : (
@@ -1350,11 +1740,15 @@ export default function AdminPage() {
                 return (
                   <div
                     key={employee.id}
-                    className="flex flex-col gap-4 rounded-3xl border border-gray-200 bg-gray-50 p-5 md:flex-row md:items-center md:justify-between"
+                    className="flex flex-col gap-4 rounded-3xl border border-gray-200 bg-gray-50 p-5 md:flex-row md:items-center md:justify-between dark:border-gray-700 dark:bg-gray-800"
                   >
                     <div>
-                      <h3 className="text-lg font-bold">{employee.name}</h3>
-                      <p className="text-sm text-gray-500">{employee.role}</p>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        {employee.full_name}
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {employee.role}
+                      </p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -1375,7 +1769,7 @@ export default function AdminPage() {
                             e.target.value as AttendanceStatus
                           )
                         }
-                        className="rounded-2xl border border-gray-300 bg-white px-4 py-2 text-sm outline-none focus:border-black"
+                        className="rounded-2xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 outline-none focus:border-black dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-white"
                       >
                         <option value="present">Present</option>
                         <option value="late">Late</option>
@@ -1396,23 +1790,24 @@ export default function AdminPage() {
   function renderMembersTab() {
     return (
       <div className="space-y-6">
-        
-        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-bold">All Members</h2>
+        <section className={cardClass}>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            All Members
+          </h2>
 
           {membersLoadFailed ? (
-            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">
+            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
               Failed to load members from Supabase.
             </div>
           ) : members.length === 0 ? (
-            <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500">
+            <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
               No registered members found.
             </div>
           ) : (
-            <div className="mt-6 overflow-x-auto rounded-2xl border border-gray-200">
+            <div className="mt-6 overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-700">
               <table className="min-w-[900px] w-full text-left text-sm">
-                <thead className="bg-gray-50">
-                  <tr className="border-b border-gray-200 text-gray-500">
+                <thead className="bg-gray-50 dark:bg-gray-800">
+                  <tr className="border-b border-gray-200 text-gray-500 dark:border-gray-700 dark:text-gray-400">
                     <th className="px-4 py-3">Name</th>
                     <th className="px-4 py-3">Email</th>
                     <th className="px-4 py-3">Phone</th>
@@ -1423,12 +1818,17 @@ export default function AdminPage() {
                 </thead>
                 <tbody>
                   {members.map((member) => (
-                    <tr key={member.id} className="border-b border-gray-100 bg-white">
-                      <td className="px-4 py-3 font-medium text-gray-900">
+                    <tr
+                      key={member.id}
+                      className="border-b border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900"
+                    >
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
                         {member.full_name}
                       </td>
-                      <td className="px-4 py-3 text-gray-700">{member.email}</td>
-                      <td className="px-4 py-3 text-gray-700">
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                        {member.email}
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
                         {member.phone || "-"}
                       </td>
                       <td className="px-4 py-3">
@@ -1453,7 +1853,7 @@ export default function AdminPage() {
                           {member.is_active ? "Active" : "Inactive"}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                         {new Date(member.created_at).toLocaleDateString()}
                       </td>
                     </tr>
@@ -1470,19 +1870,21 @@ export default function AdminPage() {
   function renderSettingsTab() {
     return (
       <div className="grid gap-8 xl:grid-cols-[420px_1fr]">
-        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-bold">Dashboard Settings</h2>
+        <section className={cardClass}>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Dashboard Settings
+          </h2>
 
           <form onSubmit={handleSettingsSave} className="mt-6 space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Theme
               </label>
               <select
                 name="theme"
                 value={settings.theme}
                 onChange={handleSettingChange}
-                className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                className={selectClass}
               >
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
@@ -1490,14 +1892,14 @@ export default function AdminPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Language
               </label>
               <select
                 name="language"
                 value={settings.language}
                 onChange={handleSettingChange}
-                className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                className={selectClass}
               >
                 <option value="English">English</option>
                 <option value="French">French</option>
@@ -1508,31 +1910,33 @@ export default function AdminPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-2xl bg-black px-5 py-3 font-semibold text-white hover:opacity-90 disabled:opacity-60"
+              className="w-full rounded-2xl bg-black px-5 py-3 font-semibold text-white hover:opacity-90 disabled:opacity-60 dark:bg-white dark:text-black"
             >
               Save Settings
             </button>
           </form>
         </section>
 
-        <section className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-bold">Current Settings</h2>
+        <section className={cardClass}>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Current Settings
+          </h2>
 
           {settingsLoadFailed ? (
-            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700">
+            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
               Failed to load settings.
             </div>
           ) : (
             <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <p className="text-sm text-gray-500">Theme</p>
-                <p className="mt-1 text-xl font-bold text-gray-900">
+              <div className={smallStatClass}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Theme</p>
+                <p className="mt-1 text-xl font-bold text-gray-900 dark:text-white">
                   {settings.theme}
                 </p>
               </div>
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <p className="text-sm text-gray-500">Language</p>
-                <p className="mt-1 text-xl font-bold text-gray-900">
+              <div className={smallStatClass}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Language</p>
+                <p className="mt-1 text-xl font-bold text-gray-900 dark:text-white">
                   {settings.language}
                 </p>
               </div>
@@ -1563,31 +1967,40 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-gray-100 text-gray-900 dark:bg-gray-950 dark:text-white">
       <div className="min-h-screen">
-        <AdminNavbar
-          activeTab={activeTab}
-          onTabChange={(tab) => {
-            setActiveTab(tab);
-            setMobileMenuOpen(false);
-          }}
-          mobileMenuOpen={mobileMenuOpen}
-          onMobileMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
-          desktopSidebarOpen={desktopSidebarOpen}
-          onDesktopSidebarToggle={() => setDesktopSidebarOpen((prev) => !prev)}
-          onLogout={handleLogout}
-        />
+              <AdminNavbar
+        activeTab={activeTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          setMobileMenuOpen(false);
+        }}
+        mobileMenuOpen={mobileMenuOpen}
+        onMobileMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
+        desktopSidebarOpen={desktopSidebarOpen}
+        onDesktopSidebarToggle={() => setDesktopSidebarOpen((prev) => !prev)}
+        onLogout={handleLogout}
+        labels={{
+          vehicles: t.vehiclesTitle,
+          gps: t.gpsTitle,
+          employees: t.employeesTitle,
+          attendance: t.attendanceTitle,
+          members: t.membersTitle,
+          settings: t.settingsTitle,
+          logout: t.loggedOut,
+        }}
+      />
 
-                <section
-          className={`min-h-screen px-4 py-8 md:px-8 ${
+        <section
+          className={`px-4 py-8 md:px-8 ${
             desktopSidebarOpen ? "lg:ml-[340px]" : "lg:ml-[110px]"
           }`}
         >
-          <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-7xl transition-colors duration-300">
             {renderHeader()}
 
             {message && (
-              <div className="mb-6 rounded-2xl bg-white px-4 py-3 text-sm text-gray-700 shadow-sm">
+              <div className="mb-6 rounded-2xl bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:bg-gray-900 dark:text-gray-300">
                 {message}
               </div>
             )}

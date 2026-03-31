@@ -23,12 +23,12 @@ const teamMembers = [
   {
     name: "Ameyaw Abishag Aboagyewaa",
     role: "Fleet Supervisor",
-    image: "/team/fleet-supervisor.jpg",
+    image: "/team/Abishag.jpeg",
   },
   {
     name: "Festus Ayiku Blemano",
     role: "Customer Relations Lead",
-    image: "/team/customer-relations.jpg",
+    image: "/team/Festus.jpeg",
   },
 ];
 

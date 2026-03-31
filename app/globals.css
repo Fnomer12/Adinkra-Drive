@@ -1,25 +1,35 @@
 @import "tailwindcss";
 
+/* 🔥 THIS IS THE FIX (enables class-based dark mode) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* =========================
    ROOT THEME (LIGHT)
 ========================= */
 :root {
-  --background: #f9fafb; /* softer than pure white */
-  --foreground: #0f172a; /* slate-900 for premium look */
+  --background: #f9fafb;
+  --foreground: #0f172a;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 /* =========================
-   DARK MODE (AUTO)
+   DARK MODE (MANUAL via .dark class)
 ========================= */
+.dark {
+  --background: #0b0f19;
+  --foreground: #e5e7eb;
+}
+
+/* ❌ REMOVE THIS (it breaks your toggle)
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0b0f19;
     --foreground: #e5e7eb;
   }
 }
+*/
 
 /* =========================
    BASE STYLES
@@ -46,12 +56,10 @@ body {
   }
 }
 
-/* default animation */
 .animate-arrow {
   animation: arrowMove 1.2s ease-in-out infinite;
 }
 
-/* faster on hover */
 button:hover .animate-arrow {
   animation: arrowMove 0.5s ease-in-out infinite;
 }
