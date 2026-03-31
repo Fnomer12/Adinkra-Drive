@@ -1,52 +1,43 @@
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
-import {
-  ADMIN_SESSION_COOKIE,
-  makeSessionToken,
-  verifyOtpCode,
-} from "@/lib/admin-auth";
+import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const adminUserId = String(body.adminUserId || "").trim();
-    const code = String(body.code || "").trim();
+    const { username, code } = body;
 
-    if (!adminUserId || !code) {
+    if (!username || !code) {
       return NextResponse.json(
-        { error: "Verification code is required." },
+        { error: "Missing username or verification code." },
         { status: 400 }
       );
     }
 
-    const isValid = await verifyOtpCode(adminUserId, code);
+    // TODO:
+    // 1. Check OTP in database
+    // 2. Confirm it is correct and not expired
+    // 3. Mark OTP used or delete it
 
-    if (!isValid) {
-      return NextResponse.json(
-        { error: "Invalid or expired verification code." },
-        { status: 401 }
-      );
-    }
+    const sessionToken = crypto.randomBytes(32).toString("hex");
 
-    const token = makeSessionToken(adminUserId);
-    const cookieStore = await cookies();
+    const response = NextResponse.json({
+      success: true,
+      redirectTo: "/ADmin00",
+    });
 
-    cookieStore.set(ADMIN_SESSION_COOKIE, token, {
+    response.cookies.set("admin_session", sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 8,
+      maxAge: 60 * 60 * 12,
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "Admin verified successfully.",
-    });
+    return response;
   } catch (error) {
     console.error("Admin verify error:", error);
     return NextResponse.json(
-      { error: "Something went wrong during verification." },
+      { error: "Verification failed." },
       { status: 500 }
     );
   }

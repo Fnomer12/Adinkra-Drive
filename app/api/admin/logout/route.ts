@@ -1,17 +1,15 @@
-import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
-import { ADMIN_SESSION_COOKIE } from "@/lib/admin-auth";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST() {
-  const cookieStore = await cookies();
+export async function GET(request: NextRequest) {
+  const response = NextResponse.redirect(new URL("/login/ADmin00", request.url));
 
-  cookieStore.set(ADMIN_SESSION_COOKIE, "", {
+  response.cookies.set("admin_session", "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 0,
+    expires: new Date(0),
   });
 
-  return NextResponse.json({ success: true });
+  return response;
 }

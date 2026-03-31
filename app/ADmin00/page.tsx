@@ -118,14 +118,6 @@ const emptyEmployeeForm: EmployeeFormState = {
   status: "active",
 };
 
-const cardClass =
-  "rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900";
-const inputClass =
-  "w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-black dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-white";
-const selectClass =
-  "w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-black dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-white";
-const smallStatClass = "rounded-2xl bg-gray-50 p-4 dark:bg-gray-800";
-
 function todayDateString() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -136,27 +128,28 @@ function generateMapEmbedUrl(lat?: number, lng?: number) {
   return `https://maps.google.com/maps?q=${finalLat},${finalLng}&z=13&output=embed`;
 }
 
-// Translation
 const translations = {
   English: {
-    adminDashboard: "Admin Dashboard",
-    vehiclesTitle: "Vehicle Management",
-    vehiclesDesc: "Add, edit, update, and manage your full vehicle inventory.",
-    gpsTitle: "GPS Map",
-    gpsDesc: "Track your active rental operations with a map view.",
-    employeesTitle: "Employee Management",
-    employeesDesc: "Add employees and manage staff records from the database.",
-    attendanceTitle: "Staff Attendance",
-    attendanceDesc: "View and update attendance records stored in the database.",
-    membersTitle: "Registered Members",
-    membersDesc: "View members who joined today and all registered members.",
-    settingsTitle: "Settings",
-    settingsDesc: "Manage theme and language only.",
+    vehicles: "Vehicles & Inventory",
+    gps: "GPS Tracking",
+    employees: "Employees",
+    attendance: "Attendance",
+    members: "Members",
+    settings: "Settings",
+    logout: "Logout",
+
+    dashboard: "Admin Dashboard",
+    manage: "Manage your dashboard, inventory, staff, attendance, and settings.",
+
+    theme: "Theme",
+    language: "Language",
+    save: "Save Settings",
+    currentSettings: "Current Settings",
 
     addVehicle: "Add Vehicle",
     editVehicle: "Edit Vehicle",
-    vehicleInventory: "Vehicle Inventory",
     cancel: "Cancel",
+    vehicleTitle: "Vehicle Title",
     rent: "Rent",
     sale: "Sale",
     available: "Available",
@@ -170,14 +163,17 @@ const translations = {
     transmission: "Transmission",
     fuelType: "Fuel Type",
     vehicleDescription: "Vehicle Description",
-    uploadImage: "Upload Image",
-    uploadNewImageOptional: "Upload New Image (optional)",
     currentImage: "Current Image",
     removeCurrentImage: "Remove current image",
+    uploadImage: "Upload Image",
+    uploadNewImage: "Upload New Image (optional)",
+    saving: "Saving...",
+    updateVehicle: "Update Vehicle",
+    vehicleInventory: "Vehicle Inventory",
     all: "All",
-    category: "Category",
     edit: "Edit",
     delete: "Delete",
+    category: "Category",
 
     gpsOverview: "GPS Overview",
     rentalVehicles: "Rental Vehicles",
@@ -185,20 +181,20 @@ const translations = {
     map: "Map",
 
     addEmployee: "Add Employee",
-    employeeList: "Employee List",
     fullName: "Full Name",
     phoneNumber: "Phone Number",
     emailAddress: "Email Address",
     active: "Active",
     offDuty: "Off Duty",
+    employeeList: "Employee List",
     removeEmployee: "Remove Employee",
 
     attendanceSummary: "Attendance Summary",
-    markAttendance: "Mark Attendance",
     present: "Present",
     late: "Late",
     absent: "Absent",
     off: "Off",
+    markAttendance: "Mark Attendance",
 
     allMembers: "All Members",
     name: "Name",
@@ -211,70 +207,62 @@ const translations = {
     no: "No",
     inactive: "Inactive",
 
-    dashboardSettings: "Dashboard Settings",
-    currentSettings: "Current Settings",
-    theme: "Theme",
-    language: "Language",
-    light: "Light",
-    dark: "Dark",
-    saveSettings: "Save Settings",
-
     memberNotifications: "Member Notifications",
     joinedToday: "Joined Today",
     joinedThisWeek: "Joined This Week",
+    noNewMembers: "No new member registrations this week.",
     noPhoneNumber: "No phone number",
-    noNewMemberRegistrations: "No new member registrations this week.",
 
-    loggedOut: "Log out",
-    settingsUpdatedSuccessfully: "Settings updated successfully.",
-    attendanceUpdated: "Attendance updated.",
-    employeeAddedSuccessfully: "Employee added successfully.",
-    employeeRemovedSuccessfully: "Employee removed successfully.",
-    vehicleUpdatedSuccessfully: "Vehicle updated successfully.",
-    vehicleDeletedSuccessfully: "Vehicle deleted successfully.",
-    vehicleAddedSuccessfully: "Vehicle added successfully and members notified.",
-
-    failedToLoadEmployees: "Failed to load employees.",
-    failedToLoadAttendance: "Failed to load attendance data.",
-    failedToLoadMembers: "Failed to load members from Supabase.",
-    failedToLoadSettings: "Failed to load settings.",
-    failedToLoadVehicles: "Could not load vehicles from Supabase.",
-    noEmployeesAddedYet: "No employees added yet.",
-    noEmployeesAvailable: "No employees available for attendance.",
-    noRegisteredMembers: "No registered members found.",
-    noVehiclesFound: "No vehicles found.",
+    failedLoadVehicles: "Could not load vehicles from Supabase.",
+    failedLoadEmployees: "Failed to load employees.",
+    failedLoadAttendance: "Failed to load attendance data.",
+    failedLoadMembers: "Failed to load members from Supabase.",
+    failedLoadSettings: "Failed to load settings.",
+    noVehicles: "No vehicles found.",
+    noEmployees: "No employees added yet.",
+    noEmployeesAttendance: "No employees available for attendance.",
+    noMembers: "No registered members found.",
 
     completeVehicleFields: "Please complete all required vehicle fields.",
     uploadVehicleImage: "Please upload a vehicle image.",
     completeEmployeeFields: "Please complete all required employee fields.",
-    failedToAddEmployee: "Failed to add employee.",
-    failedToRemoveEmployee: "Failed to remove employee.",
-    failedToUpdateAttendance: "Failed to update attendance.",
-    failedToDeleteVehicle: "Failed to delete vehicle.",
-    failedToUpdateSettings: "Failed to update settings.",
-    failedToSaveVehicle: "Something went wrong while saving the vehicle.",
+    vehicleUpdated: "Vehicle updated successfully.",
+    vehicleAdded: "Vehicle added successfully and members notified.",
+    vehicleSaveError: "Something went wrong while saving the vehicle.",
+    employeeAdded: "Employee added successfully.",
+    employeeAddFailed: "Failed to add employee.",
+    employeeRemoved: "Employee removed successfully.",
+    employeeRemoveFailed: "Failed to remove employee.",
+    attendanceUpdated: "Attendance updated.",
+    attendanceFailed: "Failed to update attendance.",
+    settingsUpdated: "Settings updated successfully.",
+    settingsFailed: "Failed to update settings.",
+    vehicleDeleted: "Vehicle deleted successfully.",
+    vehicleDeleteFailed: "Failed to delete vehicle.",
     deleteVehicleConfirm: "Delete this vehicle permanently?",
   },
 
   French: {
-    adminDashboard: "Tableau de bord admin",
-    vehiclesTitle: "Gestion des véhicules",
-    vehiclesDesc: "Ajoutez, modifiez et gérez tout votre inventaire de véhicules.",
-    gpsTitle: "Carte GPS",
-    gpsDesc: "Suivez vos locations actives avec une vue carte.",
-    employeesTitle: "Gestion des employés",
-    employeesDesc: "Ajoutez des employés et gérez leurs dossiers depuis la base de données.",
-    attendanceTitle: "Présence du personnel",
-    attendanceDesc: "Consultez et mettez à jour les présences enregistrées.",
-    membersTitle: "Membres enregistrés",
-    membersDesc: "Consultez les membres inscrits aujourd’hui et tous les membres.",
-    settingsTitle: "Paramètres",
-    settingsDesc: "Gérez uniquement le thème et la langue.",
+    vehicles: "Véhicules",
+    gps: "Suivi GPS",
+    employees: "Employés",
+    attendance: "Présence",
+    members: "Membres",
+    settings: "Paramètres",
+    logout: "Se déconnecter",
+
+    dashboard: "Tableau de bord",
+    manage: "Gérez votre tableau de bord, inventaire, personnel, présence et paramètres.",
+
+    theme: "Thème",
+    language: "Langue",
+    save: "Enregistrer",
+    currentSettings: "Paramètres actuels",
 
     addVehicle: "Ajouter un véhicule",
     editVehicle: "Modifier le véhicule",
-    vehicleInventory: "Inventaire des véhicules",
     cancel: "Annuler",
+    vehicleTitle: "Titre du véhicule",
     rent: "Location",
     sale: "Vente",
     available: "Disponible",
@@ -288,35 +276,38 @@ const translations = {
     transmission: "Transmission",
     fuelType: "Type de carburant",
     vehicleDescription: "Description du véhicule",
-    uploadImage: "Téléverser une image",
-    uploadNewImageOptional: "Téléverser une nouvelle image (facultatif)",
     currentImage: "Image actuelle",
-    removeCurrentImage: "Supprimer l’image actuelle",
+    removeCurrentImage: "Supprimer l'image actuelle",
+    uploadImage: "Téléverser une image",
+    uploadNewImage: "Téléverser une nouvelle image (optionnel)",
+    saving: "Enregistrement...",
+    updateVehicle: "Mettre à jour le véhicule",
+    vehicleInventory: "Inventaire des véhicules",
     all: "Tous",
-    category: "Catégorie",
     edit: "Modifier",
     delete: "Supprimer",
+    category: "Catégorie",
 
-    gpsOverview: "Aperçu GPS",
+    gpsOverview: "Vue GPS",
     rentalVehicles: "Véhicules en location",
     currentlyInUse: "Actuellement utilisés",
     map: "Carte",
 
     addEmployee: "Ajouter un employé",
-    employeeList: "Liste des employés",
     fullName: "Nom complet",
     phoneNumber: "Numéro de téléphone",
     emailAddress: "Adresse e-mail",
     active: "Actif",
     offDuty: "Hors service",
-    removeEmployee: "Supprimer l’employé",
+    employeeList: "Liste des employés",
+    removeEmployee: "Supprimer l'employé",
 
-    attendanceSummary: "Résumé des présences",
-    markAttendance: "Marquer la présence",
+    attendanceSummary: "Résumé de présence",
     present: "Présent",
     late: "En retard",
     absent: "Absent",
     off: "Repos",
+    markAttendance: "Marquer la présence",
 
     allMembers: "Tous les membres",
     name: "Nom",
@@ -324,75 +315,67 @@ const translations = {
     phone: "Téléphone",
     consent: "Consentement",
     status: "Statut",
-    registered: "Enregistré",
+    registered: "Inscrit",
     granted: "Accordé",
     no: "Non",
     inactive: "Inactif",
 
-    dashboardSettings: "Paramètres du tableau de bord",
-    currentSettings: "Paramètres actuels",
-    theme: "Thème",
-    language: "Langue",
-    light: "Clair",
-    dark: "Sombre",
-    saveSettings: "Enregistrer les paramètres",
-
     memberNotifications: "Notifications des membres",
-    joinedToday: "Inscrits aujourd’hui",
+    joinedToday: "Inscrits aujourd'hui",
     joinedThisWeek: "Inscrits cette semaine",
-    noPhoneNumber: "Aucun numéro",
-    noNewMemberRegistrations: "Aucune nouvelle inscription cette semaine.",
+    noNewMembers: "Aucune nouvelle inscription cette semaine.",
+    noPhoneNumber: "Aucun numéro de téléphone",
 
-    loggedOut: "Déconnecté.",
-    settingsUpdatedSuccessfully: "Paramètres mis à jour avec succès.",
-    attendanceUpdated: "Présence mise à jour.",
-    employeeAddedSuccessfully: "Employé ajouté avec succès.",
-    employeeRemovedSuccessfully: "Employé supprimé avec succès.",
-    vehicleUpdatedSuccessfully: "Véhicule mis à jour avec succès.",
-    vehicleDeletedSuccessfully: "Véhicule supprimé avec succès.",
-    vehicleAddedSuccessfully: "Véhicule ajouté avec succès et membres notifiés.",
+    failedLoadVehicles: "Impossible de charger les véhicules depuis Supabase.",
+    failedLoadEmployees: "Échec du chargement des employés.",
+    failedLoadAttendance: "Échec du chargement des présences.",
+    failedLoadMembers: "Échec du chargement des membres depuis Supabase.",
+    failedLoadSettings: "Échec du chargement des paramètres.",
+    noVehicles: "Aucun véhicule trouvé.",
+    noEmployees: "Aucun employé ajouté pour le moment.",
+    noEmployeesAttendance: "Aucun employé disponible pour la présence.",
+    noMembers: "Aucun membre enregistré trouvé.",
 
-    failedToLoadEmployees: "Échec du chargement des employés.",
-    failedToLoadAttendance: "Échec du chargement des données de présence.",
-    failedToLoadMembers: "Échec du chargement des membres depuis Supabase.",
-    failedToLoadSettings: "Échec du chargement des paramètres.",
-    failedToLoadVehicles: "Impossible de charger les véhicules depuis Supabase.",
-    noEmployeesAddedYet: "Aucun employé ajouté pour le moment.",
-    noEmployeesAvailable: "Aucun employé disponible pour la présence.",
-    noRegisteredMembers: "Aucun membre enregistré trouvé.",
-    noVehiclesFound: "Aucun véhicule trouvé.",
-
-    completeVehicleFields: "Veuillez remplir tous les champs requis du véhicule.",
+    completeVehicleFields: "Veuillez remplir tous les champs obligatoires du véhicule.",
     uploadVehicleImage: "Veuillez téléverser une image du véhicule.",
-    completeEmployeeFields: "Veuillez remplir tous les champs requis de l’employé.",
-    failedToAddEmployee: "Échec de l’ajout de l’employé.",
-    failedToRemoveEmployee: "Échec de la suppression de l’employé.",
-    failedToUpdateAttendance: "Échec de la mise à jour de la présence.",
-    failedToDeleteVehicle: "Échec de la suppression du véhicule.",
-    failedToUpdateSettings: "Échec de la mise à jour des paramètres.",
-    failedToSaveVehicle: "Une erreur s’est produite lors de l’enregistrement du véhicule.",
-    deleteVehicleConfirm: "Supprimer définitivement ce véhicule ?",
+    completeEmployeeFields: "Veuillez remplir tous les champs obligatoires de l'employé.",
+    vehicleUpdated: "Véhicule mis à jour avec succès.",
+    vehicleAdded: "Véhicule ajouté avec succès et membres notifiés.",
+    vehicleSaveError: "Une erreur est survenue lors de l'enregistrement du véhicule.",
+    employeeAdded: "Employé ajouté avec succès.",
+    employeeAddFailed: "Impossible d'ajouter l'employé.",
+    employeeRemoved: "Employé supprimé avec succès.",
+    employeeRemoveFailed: "Impossible de supprimer l'employé.",
+    attendanceUpdated: "Présence mise à jour.",
+    attendanceFailed: "Impossible de mettre à jour la présence.",
+    settingsUpdated: "Paramètres mis à jour avec succès.",
+    settingsFailed: "Impossible de mettre à jour les paramètres.",
+    vehicleDeleted: "Véhicule supprimé avec succès.",
+    vehicleDeleteFailed: "Impossible de supprimer le véhicule.",
+    deleteVehicleConfirm: "Supprimer ce véhicule définitivement ?",
   },
 
   Spanish: {
-    adminDashboard: "Panel de administración",
-    vehiclesTitle: "Gestión de vehículos",
-    vehiclesDesc: "Agrega, edita, actualiza y gestiona todo tu inventario de vehículos.",
-    gpsTitle: "Mapa GPS",
-    gpsDesc: "Sigue tus operaciones activas de alquiler con una vista de mapa.",
-    employeesTitle: "Gestión de empleados",
-    employeesDesc: "Agrega empleados y gestiona sus registros desde la base de datos.",
-    attendanceTitle: "Asistencia del personal",
-    attendanceDesc: "Consulta y actualiza los registros de asistencia almacenados.",
-    membersTitle: "Miembros registrados",
-    membersDesc: "Consulta los miembros que se unieron hoy y todos los registrados.",
-    settingsTitle: "Configuración",
-    settingsDesc: "Gestiona solo el tema y el idioma.",
+    vehicles: "Vehículos",
+    gps: "GPS",
+    employees: "Empleados",
+    attendance: "Asistencia",
+    members: "Miembros",
+    settings: "Configuración",
+    logout: "Cerrar sesión",
+
+    dashboard: "Panel de administración",
+    manage: "Administra tu panel, inventario, personal, asistencia y configuración.",
+
+    theme: "Tema",
+    language: "Idioma",
+    save: "Guardar",
+    currentSettings: "Configuración actual",
 
     addVehicle: "Agregar vehículo",
     editVehicle: "Editar vehículo",
-    vehicleInventory: "Inventario de vehículos",
     cancel: "Cancelar",
+    vehicleTitle: "Título del vehículo",
     rent: "Alquiler",
     sale: "Venta",
     available: "Disponible",
@@ -406,14 +389,17 @@ const translations = {
     transmission: "Transmisión",
     fuelType: "Tipo de combustible",
     vehicleDescription: "Descripción del vehículo",
-    uploadImage: "Subir imagen",
-    uploadNewImageOptional: "Subir nueva imagen (opcional)",
     currentImage: "Imagen actual",
     removeCurrentImage: "Eliminar imagen actual",
+    uploadImage: "Subir imagen",
+    uploadNewImage: "Subir nueva imagen (opcional)",
+    saving: "Guardando...",
+    updateVehicle: "Actualizar vehículo",
+    vehicleInventory: "Inventario de vehículos",
     all: "Todos",
-    category: "Categoría",
     edit: "Editar",
     delete: "Eliminar",
+    category: "Categoría",
 
     gpsOverview: "Resumen GPS",
     rentalVehicles: "Vehículos en alquiler",
@@ -421,20 +407,20 @@ const translations = {
     map: "Mapa",
 
     addEmployee: "Agregar empleado",
-    employeeList: "Lista de empleados",
     fullName: "Nombre completo",
     phoneNumber: "Número de teléfono",
     emailAddress: "Correo electrónico",
     active: "Activo",
     offDuty: "Fuera de servicio",
+    employeeList: "Lista de empleados",
     removeEmployee: "Eliminar empleado",
 
     attendanceSummary: "Resumen de asistencia",
-    markAttendance: "Marcar asistencia",
     present: "Presente",
     late: "Tarde",
     absent: "Ausente",
     off: "Libre",
+    markAttendance: "Marcar asistencia",
 
     allMembers: "Todos los miembros",
     name: "Nombre",
@@ -447,51 +433,61 @@ const translations = {
     no: "No",
     inactive: "Inactivo",
 
-    dashboardSettings: "Configuración del panel",
-    currentSettings: "Configuración actual",
-    theme: "Tema",
-    language: "Idioma",
-    light: "Claro",
-    dark: "Oscuro",
-    saveSettings: "Guardar configuración",
-
     memberNotifications: "Notificaciones de miembros",
-    joinedToday: "Unidos hoy",
-    joinedThisWeek: "Unidos esta semana",
+    joinedToday: "Se unieron hoy",
+    joinedThisWeek: "Se unieron esta semana",
+    noNewMembers: "No hay nuevos registros esta semana.",
     noPhoneNumber: "Sin número de teléfono",
-    noNewMemberRegistrations: "No hay nuevos registros de miembros esta semana.",
 
-    loggedOut: "Sesión cerrada.",
-    settingsUpdatedSuccessfully: "Configuración actualizada correctamente.",
-    attendanceUpdated: "Asistencia actualizada.",
-    employeeAddedSuccessfully: "Empleado agregado correctamente.",
-    employeeRemovedSuccessfully: "Empleado eliminado correctamente.",
-    vehicleUpdatedSuccessfully: "Vehículo actualizado correctamente.",
-    vehicleDeletedSuccessfully: "Vehículo eliminado correctamente.",
-    vehicleAddedSuccessfully: "Vehículo agregado correctamente y miembros notificados.",
-
-    failedToLoadEmployees: "No se pudieron cargar los empleados.",
-    failedToLoadAttendance: "No se pudieron cargar los datos de asistencia.",
-    failedToLoadMembers: "No se pudieron cargar los miembros desde Supabase.",
-    failedToLoadSettings: "No se pudieron cargar los ajustes.",
-    failedToLoadVehicles: "No se pudieron cargar los vehículos desde Supabase.",
-    noEmployeesAddedYet: "Aún no se han agregado empleados.",
-    noEmployeesAvailable: "No hay empleados disponibles para asistencia.",
-    noRegisteredMembers: "No se encontraron miembros registrados.",
-    noVehiclesFound: "No se encontraron vehículos.",
+    failedLoadVehicles: "No se pudieron cargar los vehículos desde Supabase.",
+    failedLoadEmployees: "No se pudieron cargar los empleados.",
+    failedLoadAttendance: "No se pudieron cargar los datos de asistencia.",
+    failedLoadMembers: "No se pudieron cargar los miembros desde Supabase.",
+    failedLoadSettings: "No se pudieron cargar las configuraciones.",
+    noVehicles: "No se encontraron vehículos.",
+    noEmployees: "Aún no se han agregado empleados.",
+    noEmployeesAttendance: "No hay empleados disponibles para asistencia.",
+    noMembers: "No se encontraron miembros registrados.",
 
     completeVehicleFields: "Por favor completa todos los campos requeridos del vehículo.",
     uploadVehicleImage: "Por favor sube una imagen del vehículo.",
     completeEmployeeFields: "Por favor completa todos los campos requeridos del empleado.",
-    failedToAddEmployee: "No se pudo agregar el empleado.",
-    failedToRemoveEmployee: "No se pudo eliminar el empleado.",
-    failedToUpdateAttendance: "No se pudo actualizar la asistencia.",
-    failedToDeleteVehicle: "No se pudo eliminar el vehículo.",
-    failedToUpdateSettings: "No se pudo actualizar la configuración.",
-    failedToSaveVehicle: "Algo salió mal al guardar el vehículo.",
+    vehicleUpdated: "Vehículo actualizado correctamente.",
+    vehicleAdded: "Vehículo agregado correctamente y miembros notificados.",
+    vehicleSaveError: "Ocurrió un error al guardar el vehículo.",
+    employeeAdded: "Empleado agregado correctamente.",
+    employeeAddFailed: "No se pudo agregar el empleado.",
+    employeeRemoved: "Empleado eliminado correctamente.",
+    employeeRemoveFailed: "No se pudo eliminar el empleado.",
+    attendanceUpdated: "Asistencia actualizada.",
+    attendanceFailed: "No se pudo actualizar la asistencia.",
+    settingsUpdated: "Configuración actualizada correctamente.",
+    settingsFailed: "No se pudo actualizar la configuración.",
+    vehicleDeleted: "Vehículo eliminado correctamente.",
+    vehicleDeleteFailed: "No se pudo eliminar el vehículo.",
     deleteVehicleConfirm: "¿Eliminar este vehículo permanentemente?",
   },
 } as const;
+
+const cardClass =
+  "rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-[#30363d] dark:bg-[#161b22]";
+
+const softCardClass = "rounded-2xl bg-gray-50 p-4 dark:bg-[#21262d]";
+
+const inputClass =
+  "w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-black dark:border-[#30363d] dark:bg-[#0d1117] dark:text-gray-200 dark:placeholder:text-gray-500 dark:focus:border-[#58a6ff]";
+
+const selectClass =
+  "w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-black dark:border-[#30363d] dark:bg-[#0d1117] dark:text-gray-200 dark:focus:border-[#58a6ff]";
+
+const textareaClass =
+  "w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-black dark:border-[#30363d] dark:bg-[#0d1117] dark:text-gray-200 dark:placeholder:text-gray-500 dark:focus:border-[#58a6ff]";
+
+const primaryButtonClass =
+  "w-full rounded-2xl bg-black px-5 py-3 font-semibold text-white hover:opacity-90 disabled:opacity-60 dark:bg-[#238636] dark:text-white";
+
+const secondaryButtonClass =
+  "rounded-full border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-[#30363d] dark:text-gray-200 dark:hover:bg-[#21262d]";
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>("vehicles");
@@ -500,17 +496,16 @@ export default function AdminPage() {
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(
-    []
-  );
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [mounted, setMounted] = useState(false);
+
   const [settings, setSettings] = useState<AppSetting>({
     id: "default",
     theme: "light",
     language: "English",
   });
 
-  // ✅ ADD THIS LINE RIGHT HERE
   const t = translations[settings.language];
 
   const [vehicleLoadFailed, setVehicleLoadFailed] = useState(false);
@@ -519,18 +514,15 @@ export default function AdminPage() {
   const [membersLoadFailed, setMembersLoadFailed] = useState(false);
   const [settingsLoadFailed, setSettingsLoadFailed] = useState(false);
 
-  const [vehicleForm, setVehicleForm] =
-    useState<VehicleFormState>(emptyVehicleForm);
-  const [employeeForm, setEmployeeForm] =
-    useState<EmployeeFormState>(emptyEmployeeForm);
+  const [vehicleForm, setVehicleForm] = useState<VehicleFormState>(emptyVehicleForm);
+  const [employeeForm, setEmployeeForm] = useState<EmployeeFormState>(emptyEmployeeForm);
 
   const [vehicleEditingId, setVehicleEditingId] = useState<string | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState("");
   const [existingImagePath, setExistingImagePath] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [removeCurrentImage, setRemoveCurrentImage] = useState(false);
-  const [vehicleFilter, setVehicleFilter] =
-    useState<"all" | VehicleCategory>("all");
+  const [vehicleFilter, setVehicleFilter] = useState<"all" | VehicleCategory>("all");
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -539,17 +531,20 @@ export default function AdminPage() {
   const notificationRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    setMounted(true);
     void loadAllData();
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+
     const root = document.documentElement;
     if (settings.theme === "dark") {
       root.classList.add("dark");
     } else {
       root.classList.remove("dark");
     }
-  }, [settings.theme]);
+  }, [settings.theme, mounted]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -611,19 +606,16 @@ export default function AdminPage() {
 
   const attendanceByEmployee = useMemo(() => {
     const latest: Record<string, AttendanceRecord> = {};
-
     for (const record of attendanceRecords) {
       if (!latest[record.employee_id]) {
         latest[record.employee_id] = record;
       }
     }
-
     return latest;
   }, [attendanceRecords]);
 
   const attendanceSummary = useMemo(() => {
     const values = Object.values(attendanceByEmployee).map((item) => item.status);
-
     return {
       present: values.filter((v) => v === "present").length,
       late: values.filter((v) => v === "late").length,
@@ -640,7 +632,6 @@ export default function AdminPage() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-
       setVehicles((data as Vehicle[]) || []);
       setVehicleLoadFailed(false);
     } catch (error) {
@@ -658,7 +649,6 @@ export default function AdminPage() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-
       setEmployees((data as Employee[]) || []);
       setEmployeesLoadFailed(false);
     } catch (error) {
@@ -677,7 +667,6 @@ export default function AdminPage() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-
       setAttendanceRecords((data as AttendanceRecord[]) || []);
       setAttendanceLoadFailed(false);
     } catch (error) {
@@ -695,7 +684,6 @@ export default function AdminPage() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-
       setMembers((data as Member[]) || []);
       setMembersLoadFailed(false);
     } catch (error) {
@@ -714,7 +702,6 @@ export default function AdminPage() {
         .maybeSingle();
 
       if (error) throw error;
-
       if (data) setSettings(data as AppSetting);
       setSettingsLoadFailed(false);
     } catch (error) {
@@ -772,12 +759,12 @@ export default function AdminPage() {
       !vehicleForm.year ||
       !vehicleForm.seats
     ) {
-      setMessage("Please complete all required vehicle fields.");
+      setMessage(t.completeVehicleFields);
       return false;
     }
 
     if (!vehicleEditingId && !imageFile) {
-      setMessage("Please upload a vehicle image.");
+      setMessage(t.uploadVehicleImage);
       return false;
     }
 
@@ -790,10 +777,9 @@ export default function AdminPage() {
       !employeeForm.phone.trim() ||
       !employeeForm.email.trim()
     ) {
-      setMessage("Please complete all required employee fields.");
+      setMessage(t.completeEmployeeFields);
       return false;
     }
-
     return true;
   }
 
@@ -807,9 +793,7 @@ export default function AdminPage() {
 
   async function uploadImage(file: File) {
     const ext = file.name.split(".").pop() || "jpg";
-    const path = `vehicles/${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2)}.${ext}`;
+    const path = `vehicles/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
@@ -836,7 +820,6 @@ export default function AdminPage() {
     setMessage("");
 
     if (!validateVehicleForm()) return;
-
     setLoading(true);
 
     try {
@@ -883,7 +866,7 @@ export default function AdminPage() {
           .eq("id", vehicleEditingId);
 
         if (error) throw error;
-        setMessage(t.vehicleUpdatedSuccessfully);
+        setMessage(t.vehicleUpdated);
       } else {
         const { data, error } = await supabase
           .from("vehicles")
@@ -914,14 +897,116 @@ export default function AdminPage() {
           console.error("Notification error:", notifyError);
         }
 
-        setMessage(t.vehicleAddedSuccessfully);
+        setMessage(t.vehicleAdded);
       }
 
       await loadVehicles();
       resetVehicleForm();
-    } catch (error: any) {
-      console.error("Vehicle submit error:", error);
-      setMessage(error?.message || "Something went wrong while saving the vehicle.");
+    } catch (error) {
+      console.error("Vehicle submit full error:", error);
+      setMessage(t.vehicleSaveError);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleEmployeeSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setMessage("");
+
+    if (!validateEmployeeForm()) return;
+    setLoading(true);
+
+    try {
+      const payload = {
+        full_name: employeeForm.name.trim(),
+        role: employeeForm.role,
+        phone: employeeForm.phone.trim(),
+        email: employeeForm.email.trim().toLowerCase(),
+        status: employeeForm.status,
+      };
+
+      const { error } = await supabase.from("employees").insert(payload);
+      if (error) throw error;
+
+      setEmployeeForm(emptyEmployeeForm);
+      await loadEmployees();
+      setMessage(t.employeeAdded);
+    } catch (error) {
+      console.error("Employee submit error:", error);
+      setMessage(t.employeeAddFailed);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleEmployeeDelete(employeeId: string) {
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const { error } = await supabase
+        .from("employees")
+        .delete()
+        .eq("id", employeeId);
+
+      if (error) throw error;
+
+      await loadEmployees();
+      await loadAttendance();
+      setMessage(t.employeeRemoved);
+    } catch (error) {
+      console.error("Employee delete error:", error);
+      setMessage(t.employeeRemoveFailed);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleAttendanceChange(employeeId: string, status: AttendanceStatus) {
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const payload = {
+        employee_id: employeeId,
+        status,
+        attendance_date: todayDateString(),
+      };
+
+      const { error } = await supabase.from("attendance").insert(payload);
+      if (error) throw error;
+
+      await loadAttendance();
+      setMessage(t.attendanceUpdated);
+    } catch (error) {
+      console.error("Attendance update error:", error);
+      setMessage(t.attendanceFailed);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSettingsSave(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const payload = {
+        id: settings.id || "default",
+        theme: settings.theme,
+        language: settings.language,
+      };
+
+      const { error } = await supabase.from("settings").upsert(payload);
+      if (error) throw error;
+
+      await loadSettings();
+      setMessage(t.settingsUpdated);
+    } catch (error) {
+      console.error("Settings save error:", error);
+      setMessage(t.settingsFailed);
     } finally {
       setLoading(false);
     }
@@ -976,156 +1061,28 @@ export default function AdminPage() {
 
       if (error) throw error;
 
-      if (vehicleEditingId === vehicle.id) resetVehicleForm();
+      if (vehicleEditingId === vehicle.id) {
+        resetVehicleForm();
+      }
 
       await loadVehicles();
-      setMessage(t.vehicleDeletedSuccessfully);
+      setMessage(t.vehicleDeleted);
     } catch (error) {
       console.error("Vehicle delete error:", error);
-      setMessage("Failed to delete vehicle.");
+      setMessage(t.vehicleDeleteFailed);
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleEmployeeSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setMessage("");
-
-    if (!validateEmployeeForm()) return;
-
-    setLoading(true);
-
-    try {
-      const payload = {
-        full_name: employeeForm.name.trim(),
-        role: employeeForm.role,
-        phone: employeeForm.phone.trim(),
-        email: employeeForm.email.trim().toLowerCase(),
-        status: employeeForm.status,
-      };
-
-      const { error } = await supabase.from("employees").insert(payload);
-      if (error) throw error;
-
-      setEmployeeForm(emptyEmployeeForm);
-      await loadEmployees();
-      setMessage(t.employeeAddedSuccessfully);
-    } catch (error) {
-      console.error("Employee submit error:", error);
-      setMessage("Failed to add employee.");
-    } finally {
-      setLoading(false);
-    }
+  function handleLogout() {
+    window.location.href = "/api/admin/logout";
   }
-
-  async function handleEmployeeDelete(employeeId: string) {
-    setLoading(true);
-    setMessage("");
-
-    try {
-      const { error } = await supabase
-        .from("employees")
-        .delete()
-        .eq("id", employeeId);
-
-      if (error) throw error;
-
-      await loadEmployees();
-      await loadAttendance();
-      setMessage(t.employeeRemovedSuccessfully);
-    } catch (error) {
-      console.error("Employee delete error:", error);
-      setMessage("Failed to remove employee.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleAttendanceChange(
-    employeeId: string,
-    status: AttendanceStatus
-  ) {
-    setLoading(true);
-    setMessage("");
-
-    try {
-      const payload = {
-        employee_id: employeeId,
-        status,
-        attendance_date: todayDateString(),
-      };
-
-      const { error } = await supabase.from("attendance").insert(payload);
-      if (error) throw error;
-
-      await loadAttendance();
-      setMessage(t.attendanceUpdated);
-    } catch (error) {
-      console.error("Attendance update error:", error);
-      setMessage("Failed to update attendance.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleSettingsSave(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
-
-    try {
-      const payload = {
-        id: settings.id || "default",
-        theme: settings.theme,
-        language: settings.language,
-      };
-
-      const { error } = await supabase.from("settings").upsert(payload);
-      if (error) throw error;
-
-      await loadSettings();
-      setMessage(t.settingsUpdatedSuccessfully);
-    } catch (error) {
-      console.error("Settings save error:", error);
-      setMessage("Failed to update settings.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleLogout() {
-  try {
-    await fetch("/api/admin/logout", { method: "POST" });
-    window.location.href = "/admin/login";
-  } catch (error) {
-    console.error("Logout error:", error);
-    setMessage("Failed to logout.");
-  }
-}
-
-  const titleMap: Record<AdminTab, string> = {
-  vehicles: t.vehiclesTitle,
-  gps: t.gpsTitle,
-  employees: t.employeesTitle,
-  attendance: t.attendanceTitle,
-  members: t.membersTitle,
-  settings: t.settingsTitle,
-};
-
-const descriptionMap: Record<AdminTab, string> = {
-  vehicles: t.vehiclesDesc,
-  gps: t.gpsDesc,
-  employees: t.employeesDesc,
-  attendance: t.attendanceDesc,
-  members: t.membersDesc,
-  settings: t.settingsDesc,
-};
 
   function statusLabel(status: VehicleStatus) {
-    if (status === "in_use") return "In Use";
-    if (status === "purchased") return "Purchased";
-    return "Available";
+    if (status === "in_use") return t.inUse;
+    if (status === "purchased") return t.purchased;
+    return t.available;
   }
 
   function statusBadgeClass(status: VehicleStatus) {
@@ -1141,19 +1098,26 @@ const descriptionMap: Record<AdminTab, string> = {
     return "bg-red-100 text-red-700";
   }
 
+  function attendanceLabel(status: AttendanceStatus) {
+    if (status === "present") return t.present;
+    if (status === "late") return t.late;
+    if (status === "absent") return t.absent;
+    return t.off;
+  }
+
   function renderHeader() {
     return (
-      <div className={`${cardClass} mb-8`}>
+      <div className="mb-8 rounded-3xl border border-gray-200 bg-white px-6 py-8 shadow-sm dark:border-[#30363d] dark:bg-[#161b22]">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">
-              {t.adminDashboard}
+              {t.dashboard}
             </p>
-            <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
-              {titleMap[activeTab]}
+            <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100 md:text-4xl">
+              {t[activeTab]}
             </h1>
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-              {descriptionMap[activeTab]}
+              {t.manage}
             </p>
           </div>
 
@@ -1161,7 +1125,7 @@ const descriptionMap: Record<AdminTab, string> = {
             <button
               type="button"
               onClick={() => setNotificationsOpen((prev) => !prev)}
-              className="relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700 shadow-sm hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+              className="relative inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200 bg-gray-50 text-gray-700 shadow-sm hover:bg-gray-100 dark:border-[#30363d] dark:bg-[#21262d] dark:text-gray-200 dark:hover:bg-[#30363d]"
             >
               <Bell size={20} />
               {weeklyMemberCount > 0 && (
@@ -1172,30 +1136,34 @@ const descriptionMap: Record<AdminTab, string> = {
             </button>
 
             {notificationsOpen && (
-              <div className="absolute right-0 z-30 mt-3 w-[360px] rounded-3xl border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-700 dark:bg-gray-900">
+              <div className="absolute right-0 z-30 mt-3 w-[360px] rounded-3xl border border-gray-200 bg-white p-4 shadow-xl dark:border-[#30363d] dark:bg-[#161b22]">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                    Member Notifications
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                    {t.memberNotifications}
                   </h3>
                   <button
                     type="button"
                     onClick={() => setNotificationsOpen(false)}
-                    className="rounded-full p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                    className="rounded-full p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-[#21262d]"
                   >
                     <X size={18} />
                   </button>
                 </div>
 
                 <div className="mb-4 grid grid-cols-2 gap-3">
-                  <div className={`${smallStatClass} p-3`}>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Joined Today</p>
-                    <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
+                  <div className={softCardClass}>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {t.joinedToday}
+                    </p>
+                    <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
                       {todayMemberCount}
                     </p>
                   </div>
-                  <div className={`${smallStatClass} p-3`}>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Joined This Week</p>
-                    <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
+                  <div className={softCardClass}>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {t.joinedThisWeek}
+                    </p>
+                    <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
                       {weeklyMemberCount}
                     </p>
                   </div>
@@ -1203,21 +1171,23 @@ const descriptionMap: Record<AdminTab, string> = {
 
                 <div className="max-h-80 space-y-3 overflow-y-auto">
                   {membersThisWeek.length === 0 ? (
-                    <div className={`${smallStatClass} text-sm text-gray-500 dark:text-gray-400`}>
-                      No new member registrations this week.
+                    <div className="rounded-2xl bg-gray-50 p-4 text-sm text-gray-500 dark:bg-[#21262d] dark:text-gray-400">
+                      {t.noNewMembers}
                     </div>
                   ) : (
                     membersThisWeek.map((member) => (
                       <div
                         key={member.id}
-                        className="rounded-2xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800"
+                        className="rounded-2xl border border-gray-200 bg-gray-50 p-3 dark:border-[#30363d] dark:bg-[#21262d]"
                       >
-                        <p className="font-semibold text-gray-900 dark:text-white">
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">
                           {member.full_name}
                         </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">{member.email}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          {member.email}
+                        </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {member.phone || "No phone number"}
+                          {member.phone || t.noPhoneNumber}
                         </p>
                         <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
                           {new Date(member.created_at).toLocaleString()}
@@ -1239,7 +1209,7 @@ const descriptionMap: Record<AdminTab, string> = {
       <div className="grid items-start gap-8 xl:grid-cols-[420px_1fr]">
         <section className={cardClass}>
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {vehicleEditingId ? t.editVehicle : t.addVehicle}
             </h2>
 
@@ -1247,9 +1217,9 @@ const descriptionMap: Record<AdminTab, string> = {
               <button
                 type="button"
                 onClick={resetVehicleForm}
-                className="rounded-full border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+                className={secondaryButtonClass}
               >
-                Cancel
+                {t.cancel}
               </button>
             )}
           </div>
@@ -1259,7 +1229,7 @@ const descriptionMap: Record<AdminTab, string> = {
               name="title"
               value={vehicleForm.title}
               onChange={handleVehicleChange}
-              placeholder="Vehicle Title"
+              placeholder={t.vehicleTitle}
               className={inputClass}
             />
 
@@ -1353,13 +1323,13 @@ const descriptionMap: Record<AdminTab, string> = {
               onChange={handleVehicleChange}
               placeholder={t.vehicleDescription}
               rows={4}
-              className={inputClass}
+              className={textareaClass}
             />
 
             {existingImageUrl && !removeCurrentImage && (
-              <div className="rounded-2xl border border-gray-200 p-3 dark:border-gray-700">
+              <div className="rounded-2xl border border-gray-200 p-3 dark:border-[#30363d]">
                 <p className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Current Image
+                  {t.currentImage}
                 </p>
                 <img
                   src={existingImageUrl}
@@ -1372,36 +1342,36 @@ const descriptionMap: Record<AdminTab, string> = {
                     checked={removeCurrentImage}
                     onChange={(e) => setRemoveCurrentImage(e.target.checked)}
                   />
-                  Remove current image
+                  {t.removeCurrentImage}
                 </label>
               </div>
             )}
 
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {vehicleEditingId ? "Upload New Image (optional)" : "Upload Image"}
+                {vehicleEditingId ? t.uploadNewImage : t.uploadImage}
               </label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                className={inputClass}
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-2xl bg-black px-5 py-3 font-semibold text-white hover:opacity-90 disabled:opacity-60 dark:bg-white dark:text-black"
-            >
-              {loading ? "Saving..." : vehicleEditingId ? "Update Vehicle" : "Add Vehicle"}
+            <button type="submit" disabled={loading} className={primaryButtonClass}>
+              {loading
+                ? t.saving
+                : vehicleEditingId
+                ? t.updateVehicle
+                : t.addVehicle}
             </button>
           </form>
         </section>
 
         <section className={cardClass}>
           <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {t.vehicleInventory}
             </h2>
 
@@ -1411,32 +1381,32 @@ const descriptionMap: Record<AdminTab, string> = {
                   key={filter}
                   type="button"
                   onClick={() => setVehicleFilter(filter)}
-                  className={`rounded-full px-4 py-2 text-sm ${
+                  className={`rounded-full px-4 py-2 text-sm font-medium ${
                     vehicleFilter === filter
                       ? "bg-black text-white dark:bg-white dark:text-black"
-                      : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                      : "bg-gray-100 text-gray-800 dark:bg-[#21262d] dark:text-gray-200"
                   }`}
                 >
-                  {filter === "all" ? "All" : filter === "rent" ? "Rent" : "Sale"}
+                  {filter === "all" ? t.all : filter === "rent" ? t.rent : t.sale}
                 </button>
               ))}
             </div>
           </div>
 
           {vehicleLoadFailed ? (
-            <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
-              Could not load vehicles from Supabase.
+            <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
+              {t.failedLoadVehicles}
             </div>
           ) : filteredVehicles.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
-              No vehicles found.
+            <div className="rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-[#30363d] dark:text-gray-400">
+              {t.noVehicles}
             </div>
           ) : (
             <div className="grid gap-6 md:grid-cols-2">
               {filteredVehicles.map((vehicle) => (
                 <div
                   key={vehicle.id}
-                  className="overflow-hidden rounded-3xl border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
+                  className="overflow-hidden rounded-3xl border border-gray-200 bg-gray-50 dark:border-[#30363d] dark:bg-[#21262d]"
                 >
                   <img
                     src={vehicle.image_url || "/placeholder-car.jpg"}
@@ -1447,7 +1417,7 @@ const descriptionMap: Record<AdminTab, string> = {
                   <div className="p-5">
                     <div className="mb-3 flex items-start justify-between gap-3">
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                           {vehicle.title}
                         </h3>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -1468,18 +1438,16 @@ const descriptionMap: Record<AdminTab, string> = {
                       {vehicle.description}
                     </p>
 
-                    <div className="mb-5 grid grid-cols-2 gap-3 text-sm text-gray-600 dark:text-gray-300">
-                      <div className="rounded-2xl bg-white p-3 dark:bg-gray-900">
-                        <span className="block text-xs text-gray-400 dark:text-gray-500">
-                          Category
+                    <div className="mb-5 grid grid-cols-2 gap-3 text-sm">
+                      <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+                        <span className="block text-xs text-gray-400">{t.category}</span>
+                        <span className="font-medium capitalize text-gray-900 dark:text-gray-100">
+                          {vehicle.category === "rent" ? t.rent : t.sale}
                         </span>
-                        <span className="font-medium capitalize">{vehicle.category}</span>
                       </div>
-                      <div className="rounded-2xl bg-white p-3 dark:bg-gray-900">
-                        <span className="block text-xs text-gray-400 dark:text-gray-500">
-                          Price
-                        </span>
-                        <span className="font-medium">
+                      <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+                        <span className="block text-xs text-gray-400">{t.price}</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">
                           {vehicle.category === "rent"
                             ? `$${vehicle.price}/day`
                             : `$${Number(vehicle.price).toLocaleString()}`}
@@ -1493,14 +1461,14 @@ const descriptionMap: Record<AdminTab, string> = {
                         onClick={() => handleVehicleEdit(vehicle)}
                         className="flex-1 rounded-2xl bg-black px-4 py-3 text-sm font-semibold text-white dark:bg-white dark:text-black"
                       >
-                        Edit
+                        {t.edit}
                       </button>
                       <button
                         type="button"
                         onClick={() => void handleVehicleDelete(vehicle)}
-                        className="flex-1 rounded-2xl border border-red-300 bg-white px-4 py-3 text-sm font-semibold text-red-600 dark:border-red-700 dark:bg-gray-900 dark:text-red-400"
+                        className="flex-1 rounded-2xl border border-red-300 bg-white px-4 py-3 text-sm font-semibold text-red-600 dark:border-red-900/40 dark:bg-[#0d1117] dark:text-red-400"
                       >
-                        Delete
+                        {t.delete}
                       </button>
                     </div>
                   </div>
@@ -1517,19 +1485,23 @@ const descriptionMap: Record<AdminTab, string> = {
     return (
       <div className="grid gap-8 xl:grid-cols-[320px_1fr]">
         <section className={cardClass}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            GPS Overview
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t.gpsOverview}
           </h2>
           <div className="mt-6 space-y-4">
-            <div className={smallStatClass}>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Rental Vehicles</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+            <div className={softCardClass}>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t.rentalVehicles}
+              </p>
+              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {rentedVehicles.length}
               </p>
             </div>
-            <div className={smallStatClass}>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Currently In Use</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+            <div className={softCardClass}>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t.currentlyInUse}
+              </p>
+              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {inUseVehicles.length}
               </p>
             </div>
@@ -1537,10 +1509,10 @@ const descriptionMap: Record<AdminTab, string> = {
         </section>
 
         <section className={cardClass}>
-          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-white">
-            Map
+          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t.map}
           </h2>
-          <div className="overflow-hidden rounded-3xl border border-gray-200 dark:border-gray-700">
+          <div className="overflow-hidden rounded-3xl border border-gray-200 dark:border-[#30363d]">
             <iframe
               title="GPS Map"
               src={generateMapEmbedUrl()}
@@ -1557,8 +1529,8 @@ const descriptionMap: Record<AdminTab, string> = {
     return (
       <div className="grid gap-8 xl:grid-cols-[380px_1fr]">
         <section className={cardClass}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Add Employee
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t.addEmployee}
           </h2>
 
           <form onSubmit={handleEmployeeSubmit} className="mt-6 space-y-4">
@@ -1566,7 +1538,7 @@ const descriptionMap: Record<AdminTab, string> = {
               name="name"
               value={employeeForm.name}
               onChange={handleEmployeeChange}
-              placeholder="Full Name"
+              placeholder={t.fullName}
               className={inputClass}
             />
 
@@ -1588,7 +1560,7 @@ const descriptionMap: Record<AdminTab, string> = {
               name="phone"
               value={employeeForm.phone}
               onChange={handleEmployeeChange}
-              placeholder="Phone Number"
+              placeholder={t.phoneNumber}
               className={inputClass}
             />
 
@@ -1596,7 +1568,7 @@ const descriptionMap: Record<AdminTab, string> = {
               name="email"
               value={employeeForm.email}
               onChange={handleEmployeeChange}
-              placeholder="Email Address"
+              placeholder={t.emailAddress}
               className={inputClass}
             />
 
@@ -1606,43 +1578,39 @@ const descriptionMap: Record<AdminTab, string> = {
               onChange={handleEmployeeChange}
               className={selectClass}
             >
-              <option value="active">Active</option>
-              <option value="off">Off Duty</option>
+              <option value="active">{t.active}</option>
+              <option value="off">{t.offDuty}</option>
             </select>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-2xl bg-black px-5 py-3 font-semibold text-white hover:opacity-90 disabled:opacity-60 dark:bg-white dark:text-black"
-            >
-              Add Employee
+            <button type="submit" disabled={loading} className={primaryButtonClass}>
+              {t.addEmployee}
             </button>
           </form>
         </section>
 
         <section className={cardClass}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Employee List
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t.employeeList}
           </h2>
 
           {employeesLoadFailed ? (
-            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
-              Failed to load employees.
+            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
+              {t.failedLoadEmployees}
             </div>
           ) : employees.length === 0 ? (
-            <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
-              No employees added yet.
+            <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-[#30363d] dark:text-gray-400">
+              {t.noEmployees}
             </div>
           ) : (
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {employees.map((employee) => (
                 <div
                   key={employee.id}
-                  className="rounded-3xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-700 dark:bg-gray-800"
+                  className="rounded-3xl border border-gray-200 bg-gray-50 p-5 dark:border-[#30363d] dark:bg-[#21262d]"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                         {employee.full_name}
                       </h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -1656,7 +1624,7 @@ const descriptionMap: Record<AdminTab, string> = {
                           : "bg-gray-200 text-gray-700"
                       }`}
                     >
-                      {employee.status === "active" ? "Active" : "Off Duty"}
+                      {employee.status === "active" ? t.active : t.offDuty}
                     </span>
                   </div>
 
@@ -1669,9 +1637,9 @@ const descriptionMap: Record<AdminTab, string> = {
                     <button
                       type="button"
                       onClick={() => void handleEmployeeDelete(employee.id)}
-                      className="rounded-2xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-600 dark:border-red-700 dark:bg-gray-900 dark:text-red-400"
+                      className="rounded-2xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-600 dark:border-red-900/40 dark:bg-[#0d1117] dark:text-red-400"
                     >
-                      Remove Employee
+                      {t.removeEmployee}
                     </button>
                   </div>
                 </div>
@@ -1687,31 +1655,31 @@ const descriptionMap: Record<AdminTab, string> = {
     return (
       <div className="grid gap-8 xl:grid-cols-[320px_1fr]">
         <section className={cardClass}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Attendance Summary
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t.attendanceSummary}
           </h2>
           <div className="mt-6 space-y-4">
-            <div className={smallStatClass}>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Present</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+            <div className={softCardClass}>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t.present}</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {attendanceSummary.present}
               </p>
             </div>
-            <div className={smallStatClass}>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Late</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+            <div className={softCardClass}>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t.late}</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {attendanceSummary.late}
               </p>
             </div>
-            <div className={smallStatClass}>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Absent</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+            <div className={softCardClass}>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t.absent}</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {attendanceSummary.absent}
               </p>
             </div>
-            <div className={smallStatClass}>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Off</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-white">
+            <div className={softCardClass}>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t.off}</p>
+              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {attendanceSummary.off}
               </p>
             </div>
@@ -1719,17 +1687,17 @@ const descriptionMap: Record<AdminTab, string> = {
         </section>
 
         <section className={cardClass}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Mark Attendance
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t.markAttendance}
           </h2>
 
           {attendanceLoadFailed || employeesLoadFailed ? (
-            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
-              Failed to load attendance data.
+            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
+              {t.failedLoadAttendance}
             </div>
           ) : employees.length === 0 ? (
-            <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
-              No employees available for attendance.
+            <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-[#30363d] dark:text-gray-400">
+              {t.noEmployeesAttendance}
             </div>
           ) : (
             <div className="mt-6 space-y-4">
@@ -1740,10 +1708,10 @@ const descriptionMap: Record<AdminTab, string> = {
                 return (
                   <div
                     key={employee.id}
-                    className="flex flex-col gap-4 rounded-3xl border border-gray-200 bg-gray-50 p-5 md:flex-row md:items-center md:justify-between dark:border-gray-700 dark:bg-gray-800"
+                    className="flex flex-col gap-4 rounded-3xl border border-gray-200 bg-gray-50 p-5 md:flex-row md:items-center md:justify-between dark:border-[#30363d] dark:bg-[#21262d]"
                   >
                     <div>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                         {employee.full_name}
                       </h3>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -1757,8 +1725,7 @@ const descriptionMap: Record<AdminTab, string> = {
                           employeeAttendance
                         )}`}
                       >
-                        {employeeAttendance.charAt(0).toUpperCase() +
-                          employeeAttendance.slice(1)}
+                        {attendanceLabel(employeeAttendance)}
                       </span>
 
                       <select
@@ -1769,12 +1736,12 @@ const descriptionMap: Record<AdminTab, string> = {
                             e.target.value as AttendanceStatus
                           )
                         }
-                        className="rounded-2xl border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 outline-none focus:border-black dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:border-white"
+                        className={selectClass}
                       >
-                        <option value="present">Present</option>
-                        <option value="late">Late</option>
-                        <option value="absent">Absent</option>
-                        <option value="off">Off</option>
+                        <option value="present">{t.present}</option>
+                        <option value="late">{t.late}</option>
+                        <option value="absent">{t.absent}</option>
+                        <option value="off">{t.off}</option>
                       </select>
                     </div>
                   </div>
@@ -1791,38 +1758,38 @@ const descriptionMap: Record<AdminTab, string> = {
     return (
       <div className="space-y-6">
         <section className={cardClass}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            All Members
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t.allMembers}
           </h2>
 
           {membersLoadFailed ? (
-            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
-              Failed to load members from Supabase.
+            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
+              {t.failedLoadMembers}
             </div>
           ) : members.length === 0 ? (
-            <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
-              No registered members found.
+            <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-[#30363d] dark:text-gray-400">
+              {t.noMembers}
             </div>
           ) : (
-            <div className="mt-6 overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-700">
+            <div className="mt-6 overflow-x-auto rounded-2xl border border-gray-200 dark:border-[#30363d]">
               <table className="min-w-[900px] w-full text-left text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-800">
-                  <tr className="border-b border-gray-200 text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                    <th className="px-4 py-3">Name</th>
-                    <th className="px-4 py-3">Email</th>
-                    <th className="px-4 py-3">Phone</th>
-                    <th className="px-4 py-3">Consent</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Registered</th>
+                <thead className="bg-gray-50 dark:bg-[#21262d]">
+                  <tr className="border-b border-gray-200 text-gray-500 dark:border-[#30363d] dark:text-gray-400">
+                    <th className="px-4 py-3">{t.name}</th>
+                    <th className="px-4 py-3">{t.email}</th>
+                    <th className="px-4 py-3">{t.phone}</th>
+                    <th className="px-4 py-3">{t.consent}</th>
+                    <th className="px-4 py-3">{t.status}</th>
+                    <th className="px-4 py-3">{t.registered}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {members.map((member) => (
                     <tr
                       key={member.id}
-                      className="border-b border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900"
+                      className="border-b border-gray-100 bg-white dark:border-[#30363d] dark:bg-[#161b22]"
                     >
-                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
                         {member.full_name}
                       </td>
                       <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
@@ -1839,7 +1806,7 @@ const descriptionMap: Record<AdminTab, string> = {
                               : "bg-gray-200 text-gray-700"
                           }`}
                         >
-                          {member.consent ? "Granted" : "No"}
+                          {member.consent ? t.granted : t.no}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -1850,10 +1817,10 @@ const descriptionMap: Record<AdminTab, string> = {
                               : "bg-gray-200 text-gray-700"
                           }`}
                         >
-                          {member.is_active ? "Active" : "Inactive"}
+                          {member.is_active ? t.active : t.inactive}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
                         {new Date(member.created_at).toLocaleDateString()}
                       </td>
                     </tr>
@@ -1871,14 +1838,14 @@ const descriptionMap: Record<AdminTab, string> = {
     return (
       <div className="grid gap-8 xl:grid-cols-[420px_1fr]">
         <section className={cardClass}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Dashboard Settings
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t.settings}
           </h2>
 
           <form onSubmit={handleSettingsSave} className="mt-6 space-y-4">
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Theme
+                {t.theme}
               </label>
               <select
                 name="theme"
@@ -1893,7 +1860,7 @@ const descriptionMap: Record<AdminTab, string> = {
 
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Language
+                {t.language}
               </label>
               <select
                 name="language"
@@ -1907,36 +1874,32 @@ const descriptionMap: Record<AdminTab, string> = {
               </select>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-2xl bg-black px-5 py-3 font-semibold text-white hover:opacity-90 disabled:opacity-60 dark:bg-white dark:text-black"
-            >
-              Save Settings
+            <button type="submit" disabled={loading} className={primaryButtonClass}>
+              {t.save}
             </button>
           </form>
         </section>
 
         <section className={cardClass}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Current Settings
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t.currentSettings}
           </h2>
 
           {settingsLoadFailed ? (
             <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
-              Failed to load settings.
+              {t.failedLoadSettings}
             </div>
           ) : (
             <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <div className={smallStatClass}>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Theme</p>
-                <p className="mt-1 text-xl font-bold text-gray-900 dark:text-white">
+              <div className={softCardClass}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t.theme}</p>
+                <p className="mt-1 text-xl font-bold text-gray-900 dark:text-gray-100">
                   {settings.theme}
                 </p>
               </div>
-              <div className={smallStatClass}>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Language</p>
-                <p className="mt-1 text-xl font-bold text-gray-900 dark:text-white">
+              <div className={softCardClass}>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t.language}</p>
+                <p className="mt-1 text-xl font-bold text-gray-900 dark:text-gray-100">
                   {settings.language}
                 </p>
               </div>
@@ -1967,40 +1930,40 @@ const descriptionMap: Record<AdminTab, string> = {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 text-gray-900 dark:bg-gray-950 dark:text-white">
+    <main className="min-h-screen bg-gray-100 text-gray-900 dark:bg-[#0d1117] dark:text-gray-200">
       <div className="min-h-screen">
-              <AdminNavbar
-        activeTab={activeTab}
-        onTabChange={(tab) => {
-          setActiveTab(tab);
-          setMobileMenuOpen(false);
-        }}
-        mobileMenuOpen={mobileMenuOpen}
-        onMobileMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
-        desktopSidebarOpen={desktopSidebarOpen}
-        onDesktopSidebarToggle={() => setDesktopSidebarOpen((prev) => !prev)}
-        onLogout={handleLogout}
-        labels={{
-          vehicles: t.vehiclesTitle,
-          gps: t.gpsTitle,
-          employees: t.employeesTitle,
-          attendance: t.attendanceTitle,
-          members: t.membersTitle,
-          settings: t.settingsTitle,
-          logout: t.loggedOut,
-        }}
-      />
+        <AdminNavbar
+          activeTab={activeTab}
+          onTabChange={(tab) => {
+            setActiveTab(tab);
+            setMobileMenuOpen(false);
+          }}
+          mobileMenuOpen={mobileMenuOpen}
+          onMobileMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
+          desktopSidebarOpen={desktopSidebarOpen}
+          onDesktopSidebarToggle={() => setDesktopSidebarOpen((prev) => !prev)}
+          onLogout={handleLogout}
+          labels={{
+            vehicles: t.vehicles,
+            gps: t.gps,
+            employees: t.employees,
+            attendance: t.attendance,
+            members: t.members,
+            settings: t.settings,
+            logout: t.logout,
+          }}
+        />
 
         <section
           className={`px-4 py-8 md:px-8 ${
             desktopSidebarOpen ? "lg:ml-[340px]" : "lg:ml-[110px]"
           }`}
         >
-          <div className="mx-auto max-w-7xl transition-colors duration-300">
+          <div className="mx-auto max-w-7xl">
             {renderHeader()}
 
             {message && (
-              <div className="mb-6 rounded-2xl bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:bg-gray-900 dark:text-gray-300">
+              <div className="mb-6 rounded-2xl bg-white px-4 py-3 text-sm text-gray-700 shadow-sm dark:bg-[#161b22] dark:text-gray-300">
                 {message}
               </div>
             )}

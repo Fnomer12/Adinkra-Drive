@@ -1,30 +1,31 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+
+const ADMIN_DASHBOARD_PATH = "/ADmin00";
+const ADMIN_LOGIN_PATH = "/login/ADmin00";
+const ADMIN_VERIFY_PATH = "/login/ADmin00/verify";
+const SESSION_COOKIE = "admin_session";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const session = request.cookies.get(SESSION_COOKIE)?.value;
 
-  const isAdminArea = pathname.startsWith("/admin");
-  const isPublicAdminPage =
-    pathname === "/admin/login" || pathname === "/admin/verify";
-  const isAdminApi =
-    pathname.startsWith("/api/admin/login") ||
-    pathname.startsWith("/api/admin/verify") ||
-    pathname.startsWith("/api/admin/logout");
+  const isDashboardRoute = pathname.startsWith(ADMIN_DASHBOARD_PATH);
+  const isLoginRoute = pathname.startsWith(ADMIN_LOGIN_PATH);
+  const isVerifyRoute = pathname.startsWith(ADMIN_VERIFY_PATH);
 
-  if (!isAdminArea || isPublicAdminPage || isAdminApi) {
-    return NextResponse.next();
+  if (isDashboardRoute && !session) {
+    const loginUrl = new URL(ADMIN_LOGIN_PATH, request.url);
+    return NextResponse.redirect(loginUrl);
   }
 
-  const session = request.cookies.get("admin_session")?.value;
-
-  if (!session) {
-    return NextResponse.redirect(new URL("/admin/login", request.url));
+  if ((isLoginRoute || isVerifyRoute) && session) {
+    const dashboardUrl = new URL(ADMIN_DASHBOARD_PATH, request.url);
+    return NextResponse.redirect(dashboardUrl);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  matcher: ["/ADmin00/:path*", "/login/ADmin00/:path*"],
 };
