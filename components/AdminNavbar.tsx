@@ -13,6 +13,7 @@ import {
   X,
   UserRoundPlus,
   Settings,
+  ReceiptText,
 } from "lucide-react";
 
 export type AdminTab =
@@ -21,6 +22,7 @@ export type AdminTab =
   | "employees"
   | "attendance"
   | "members"
+  | "purchase_history"
   | "settings";
 
 type NavbarLabels = {
@@ -29,6 +31,7 @@ type NavbarLabels = {
   employees: string;
   attendance: string;
   members: string;
+  purchaseHistory: string;
   settings: string;
   logout: string;
 };
@@ -57,17 +60,18 @@ export default function AdminNavbar({
   const sidebarWidthClass = desktopSidebarOpen ? "lg:w-[340px]" : "lg:w-[110px]";
 
   const navItems: {
-    key: AdminTab;
-    label: string;
-    icon: ComponentType<{ size?: number; className?: string }>;
-  }[] = [
-    { key: "vehicles", label: labels.vehicles, icon: CarFront },
-    { key: "gps", label: labels.gps, icon: MapPinned },
-    { key: "employees", label: labels.employees, icon: Users },
-    { key: "attendance", label: labels.attendance, icon: ClipboardCheck },
-    { key: "members", label: labels.members, icon: UserRoundPlus },
-    { key: "settings", label: labels.settings, icon: Settings },
-  ];
+  key: AdminTab;
+  label: string;
+  icon: ComponentType<{ size?: number; className?: string }>;
+}[] = [
+  { key: "vehicles", label: labels.vehicles, icon: CarFront },
+  { key: "gps", label: labels.gps, icon: MapPinned },
+  { key: "employees", label: labels.employees, icon: Users },
+  { key: "attendance", label: labels.attendance, icon: ClipboardCheck },
+  { key: "members", label: labels.members, icon: UserRoundPlus },
+  { key: "purchase_history", label: labels.purchaseHistory, icon: ReceiptText },
+  { key: "settings", label: labels.settings, icon: Settings },
+];
 
   const navButtonClass = (tab: AdminTab, compact = false) =>
     [
@@ -102,7 +106,7 @@ export default function AdminNavbar({
         </div>
 
         {mobileMenuOpen && (
-          <div className="mt-4 rounded-3xl border border-gray-200 bg-white p-4 shadow-sm dark:border-[#30363d] dark:bg-[#161b22]">
+          <div className="mt-4 max-h-[75vh] overflow-y-auto rounded-3xl border border-gray-200 bg-white p-4 shadow-sm dark:border-[#30363d] dark:bg-[#161b22]">
             <div className="mb-8 flex items-center justify-center">
               <img
                 src="/adinkra_logo.png"
@@ -141,7 +145,7 @@ export default function AdminNavbar({
       </div>
 
       <aside
-        className={`fixed left-0 top-0 hidden h-screen shrink-0 flex-col border-r border-gray-200 bg-white px-3 py-3 text-black transition-all duration-300 dark:border-[#30363d] dark:bg-[#0d1117] dark:text-white lg:flex ${sidebarWidthClass}`}
+  className={`fixed left-0 top-0 hidden h-screen shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white px-3 py-3 text-black transition-all duration-300 dark:border-[#30363d] dark:bg-[#0d1117] dark:text-white lg:flex ${sidebarWidthClass}`}
       >
         <div className="flex justify-end">
           <button
@@ -167,8 +171,8 @@ export default function AdminNavbar({
           />
         </div>
 
-        <div className="flex flex-1 items-center">
-          <div className={`w-full space-y-4 ${desktopSidebarOpen ? "px-0" : "mx-auto max-w-[72px]"}`}>
+        <div className="flex flex-1 overflow-y-auto py-6">
+            <div className={`w-full space-y-4 ${desktopSidebarOpen ? "px-0" : "mx-auto max-w-[72px]"}`}>
             {navItems.map((item) => {
               const Icon = item.icon;
               return (

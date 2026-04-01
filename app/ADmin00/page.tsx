@@ -93,6 +93,38 @@ type AppSetting = {
   updated_at?: string;
 };
 
+type PurchaseHistoryItem = {
+  id: string;
+  booking_type: "rent" | "buy";
+  full_name: string;
+  email: string;
+  phone: string;
+  start_date: string | null;
+  end_date: string | null;
+  pickup_location: string | null;
+  total_amount: number;
+  status: string;
+  created_at?: string;
+  vehicle_id?: string;
+  vehicles?:
+    | {
+        title: string;
+        brand: string;
+        model: string;
+        year: number;
+        image_url: string | null;
+      }
+    | {
+        title: string;
+        brand: string;
+        model: string;
+        year: number;
+        image_url: string | null;
+      }[]
+    | null;
+};
+
+
 const BUCKET = "vehicle-images";
 const supabase = createClient();
 
@@ -135,6 +167,7 @@ const translations = {
     employees: "Employees",
     attendance: "Attendance",
     members: "Members",
+    purchase_history: "Purchase History",
     settings: "Settings",
     logout: "Logout",
 
@@ -248,6 +281,7 @@ const translations = {
     employees: "Employés",
     attendance: "Présence",
     members: "Membres",
+    purchase_history: "Historique des achats",
     settings: "Paramètres",
     logout: "Se déconnecter",
 
@@ -361,6 +395,7 @@ const translations = {
     employees: "Empleados",
     attendance: "Asistencia",
     members: "Miembros",
+    purchase_history: "Historial de compras",
     settings: "Configuración",
     logout: "Cerrar sesión",
 
@@ -498,6 +533,7 @@ export default function AdminPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistoryItem[]>([]);
   const [mounted, setMounted] = useState(false);
 
   const [settings, setSettings] = useState<AppSetting>({
@@ -513,6 +549,7 @@ export default function AdminPage() {
   const [attendanceLoadFailed, setAttendanceLoadFailed] = useState(false);
   const [membersLoadFailed, setMembersLoadFailed] = useState(false);
   const [settingsLoadFailed, setSettingsLoadFailed] = useState(false);
+  const [purchaseHistoryLoadFailed, setPurchaseHistoryLoadFailed] = useState(false);
 
   const [vehicleForm, setVehicleForm] = useState<VehicleFormState>(emptyVehicleForm);
   const [employeeForm, setEmployeeForm] = useState<EmployeeFormState>(emptyEmployeeForm);
@@ -560,15 +597,16 @@ export default function AdminPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  async function loadAllData() {
-    await Promise.all([
-      loadVehicles(),
-      loadEmployees(),
-      loadAttendance(),
-      loadMembers(),
-      loadSettings(),
-    ]);
-  }
+async function loadAllData() {
+  await Promise.all([
+    loadVehicles(),
+    loadEmployees(),
+    loadAttendance(),
+    loadMembers(),
+    loadPurchaseHistory(),
+    loadSettings(),
+  ]);
+}
 
   const filteredVehicles = useMemo(() => {
     if (vehicleFilter === "all") return vehicles;
@@ -692,6 +730,44 @@ export default function AdminPage() {
       setMembers([]);
     }
   }
+
+  async function loadPurchaseHistory() {
+  try {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select(`
+        id,
+        booking_type,
+        full_name,
+        email,
+        phone,
+        start_date,
+        end_date,
+        pickup_location,
+        total_amount,
+        status,
+        created_at,
+        vehicle_id,
+        vehicles (
+          title,
+          brand,
+          model,
+          year,
+          image_url
+        )
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    setPurchaseHistory((data ?? []) as unknown as PurchaseHistoryItem[]);
+    setPurchaseHistoryLoadFailed(false);
+  } catch (error) {
+    console.error("Load purchase history error:", error);
+    setPurchaseHistoryLoadFailed(true);
+    setPurchaseHistory([]);
+  }
+}
 
   async function loadSettings() {
     try {
@@ -1834,6 +1910,120 @@ export default function AdminPage() {
     );
   }
 
+  function renderPurchaseHistoryTab() {
+  return (
+    <div className="space-y-6">
+      <section className={cardClass}>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          {t.purchase_history}
+        </h2>
+
+        {purchaseHistoryLoadFailed ? (
+          <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
+            Failed to load purchase history.
+          </div>
+        ) : purchaseHistory.length === 0 ? (
+          <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-[#30363d] dark:text-gray-400">
+            No rentals or purchases found.
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-4">
+            {purchaseHistory.map((item) => {
+  const vehicleInfo = Array.isArray(item.vehicles)
+    ? item.vehicles[0]
+    : item.vehicles;
+
+  return (
+              <div
+                key={item.id}
+                className="rounded-3xl border border-gray-200 bg-gray-50 p-5 dark:border-[#30363d] dark:bg-[#21262d]"
+              >
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div className="flex gap-4">
+                   {vehicleInfo?.image_url ? (
+                      <img
+                        src={vehicleInfo.image_url}
+                        alt={vehicleInfo.title}
+                        className="h-24 w-32 rounded-2xl object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-24 w-32 items-center justify-center rounded-2xl bg-gray-200 text-sm text-gray-500 dark:bg-[#30363d] dark:text-gray-400">
+                        No image
+                      </div>
+                    )}
+
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                        {item.full_name}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {item.email}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {item.phone}
+                      </p>
+
+                      <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        <p>
+                          Vehicle:{" "}
+                          <span className="font-medium text-gray-800 dark:text-gray-200">
+                           {vehicleInfo
+                                ? `${vehicleInfo.title} (${vehicleInfo.brand} ${vehicleInfo.model} ${vehicleInfo.year})`
+                                : "Unknown vehicle"}
+                          </span>
+                        </p>
+                        <p>
+                          Type:{" "}
+                          <span className="font-medium capitalize text-gray-800 dark:text-gray-200">
+                            {item.booking_type}
+                          </span>
+                        </p>
+                        <p>
+                          Status:{" "}
+                          <span className="font-medium capitalize text-gray-800 dark:text-gray-200">
+                            {item.status}
+                          </span>
+                        </p>
+                        {item.booking_type === "rent" && (
+                          <p>
+                            Rental Period:{" "}
+                            <span className="font-medium text-gray-800 dark:text-gray-200">
+                              {item.start_date || "-"} to {item.end_date || "-"}
+                            </span>
+                          </p>
+                        )}
+                        <p>
+                          Pickup Location:{" "}
+                          <span className="font-medium text-gray-800 dark:text-gray-200">
+                            {item.pickup_location || "-"}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                                    <div className="rounded-2xl bg-white px-4 py-3 text-right shadow-sm dark:bg-[#0d1117]">
+                    <p className="text-xs text-gray-400">Total Amount</p>
+                    <p className="mt-1 text-xl font-bold text-gray-900 dark:text-gray-100">
+                      ${Number(item.total_amount || 0).toLocaleString()}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {item.created_at
+                        ? new Date(item.created_at).toLocaleString()
+                        : ""}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  </div>
+);
+}
+
   function renderSettingsTab() {
     return (
       <div className="grid gap-8 xl:grid-cols-[420px_1fr]">
@@ -1910,24 +2100,26 @@ export default function AdminPage() {
     );
   }
 
-  function renderActiveTab() {
-    switch (activeTab) {
-      case "vehicles":
-        return renderVehiclesTab();
-      case "gps":
-        return renderGpsTab();
-      case "employees":
-        return renderEmployeesTab();
-      case "attendance":
-        return renderAttendanceTab();
-      case "members":
-        return renderMembersTab();
-      case "settings":
-        return renderSettingsTab();
-      default:
-        return null;
-    }
+ function renderActiveTab() {
+  switch (activeTab) {
+    case "vehicles":
+      return renderVehiclesTab();
+    case "gps":
+      return renderGpsTab();
+    case "employees":
+      return renderEmployeesTab();
+    case "attendance":
+      return renderAttendanceTab();
+    case "members":
+      return renderMembersTab();
+    case "purchase_history":
+      return renderPurchaseHistoryTab();
+    case "settings":
+      return renderSettingsTab();
+    default:
+      return null;
   }
+}
 
   return (
     <main className="min-h-screen bg-gray-100 text-gray-900 dark:bg-[#0d1117] dark:text-gray-200">
@@ -1944,14 +2136,15 @@ export default function AdminPage() {
           onDesktopSidebarToggle={() => setDesktopSidebarOpen((prev) => !prev)}
           onLogout={handleLogout}
           labels={{
-            vehicles: t.vehicles,
-            gps: t.gps,
-            employees: t.employees,
-            attendance: t.attendance,
-            members: t.members,
-            settings: t.settings,
-            logout: t.logout,
-          }}
+              vehicles: t.vehicles,
+              gps: t.gps,
+              employees: t.employees,
+              attendance: t.attendance,
+              members: t.members,
+              purchaseHistory: "Purchase History",
+              settings: t.settings,
+              logout: t.logout,
+            }}
         />
 
         <section

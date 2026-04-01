@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Link from "next/link";
 
 type Vehicle = {
   id: string;
@@ -89,16 +90,23 @@ function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
           </div>
         </div>
 
-        <button
-          disabled={!isAvailable}
-          className={`w-full rounded-full px-4 py-3 text-sm font-semibold transition ${
-            isAvailable
-              ? "bg-black text-white hover:opacity-90"
-              : "cursor-not-allowed bg-gray-300 text-gray-600"
-          }`}
-        >
-          {isAvailable ? "Buy Now" : "Purchased"}
-        </button>
+       {isAvailable ? (
+      <Link
+        href={`/booking?vehicleId=${vehicle.id}&title=${encodeURIComponent(
+          vehicle.title
+        )}&price=${vehicle.price}&type=buy`}
+        className="block w-full rounded-full bg-black px-4 py-3 text-center text-sm font-semibold text-white transition hover:opacity-90"
+      >
+        Buy Now
+      </Link>
+    ) : (
+      <button
+        disabled
+        className="w-full cursor-not-allowed rounded-full bg-gray-300 px-4 py-3 text-sm font-semibold text-gray-600"
+      >
+        Purchased
+      </button>
+    )}
       </div>
     </div>
   );
