@@ -3,11 +3,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Bell, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/dist/style.css";
 import AdminNavbar, { type AdminTab } from "@/components/AdminNavbar";
+
 
 type VehicleStatus = "available" | "in_use" | "purchased";
 type VehicleCategory = "rent" | "sale";
 type EmployeeRole =
+  | "Chauffeur"
   | "Driver"
   | "Operations Manager"
   | "Sales Manager"
@@ -57,8 +61,13 @@ type Employee = {
   phone: string;
   email: string;
   status: "active" | "off";
+  image_url: string | null;
+  image_path?: string | null;
+  is_chauffeur: boolean;
+  is_available: boolean;
   created_at?: string;
 };
+
 
 type EmployeeFormState = {
   name: string;
@@ -66,6 +75,7 @@ type EmployeeFormState = {
   phone: string;
   email: string;
   status: "active" | "off";
+  is_chauffeur: boolean;
 };
 
 type AttendanceRecord = {
@@ -106,6 +116,10 @@ type PurchaseHistoryItem = {
   status: string;
   created_at?: string;
   vehicle_id?: string;
+  chauffeur_required?: boolean | null;
+  chauffeur_name?: string | null;
+  chauffeur_phone?: string | null;
+  pickup_time?: string | null;
   vehicles?:
     | {
         title: string;
@@ -122,10 +136,12 @@ type PurchaseHistoryItem = {
         image_url: string | null;
       }[]
     | null;
+
 };
 
 
 const BUCKET = "vehicle-images";
+const EMPLOYEE_BUCKET = "employee-images";
 const supabase = createClient();
 
 const emptyVehicleForm: VehicleFormState = {
@@ -148,17 +164,9 @@ const emptyEmployeeForm: EmployeeFormState = {
   phone: "",
   email: "",
   status: "active",
+  is_chauffeur: false,
 };
 
-function todayDateString() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function generateMapEmbedUrl(lat?: number, lng?: number) {
-  const finalLat = lat ?? 5.6037;
-  const finalLng = lng ?? -0.187;
-  return `https://maps.google.com/maps?q=${finalLat},${finalLng}&z=13&output=embed`;
-}
 
 const translations = {
   English: {
@@ -524,6 +532,37 @@ const primaryButtonClass =
 const secondaryButtonClass =
   "rounded-full border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:border-[#30363d] dark:text-gray-200 dark:hover:bg-[#21262d]";
 
+
+
+
+function todayDateString() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function generateMapEmbedUrl(lat?: number, lng?: number) {
+  const finalLat = lat ?? 5.6037;
+  const finalLng = lng ?? -0.187;
+  return `https://maps.google.com/maps?q=${finalLat},${finalLng}&z=13&output=embed`;
+}
+
+function formatDateKey(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function analyticsBarWidth(value: number, max: number) {
+  if (max === 0) return "0%";
+  return `${(value / max) * 100}%`;
+}
+
+function formatReadableDate(date: Date) {
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>("vehicles");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -531,9 +570,20 @@ export default function AdminPage() {
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [selectedAttendanceDate, setSelectedAttendanceDate] = useState<Date>(new Date());
+  const [attendanceEmployeeFilter, setAttendanceEmployeeFilter] = useState<string>("all");
+const [attendanceStatusFilter, setAttendanceStatusFilter] = useState<
+  "all" | AttendanceStatus
+>("all");
+const [attendanceMonthFilter, setAttendanceMonthFilter] = useState<string>(
+  new Date().toISOString().slice(0, 7)
+);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistoryItem[]>([]);
+  const [purchaseHistoryFilter, setPurchaseHistoryFilter] = useState<
+  "all" | "rent" | "buy"
+      >("all");
   const [mounted, setMounted] = useState(false);
 
   const [settings, setSettings] = useState<AppSetting>({
@@ -553,6 +603,8 @@ export default function AdminPage() {
 
   const [vehicleForm, setVehicleForm] = useState<VehicleFormState>(emptyVehicleForm);
   const [employeeForm, setEmployeeForm] = useState<EmployeeFormState>(emptyEmployeeForm);
+  const [employeeImageFile, setEmployeeImageFile] = useState<File | null>(null);
+  const [employeeFilter, setEmployeeFilter] = useState<"all" | EmployeeRole>("all");
 
   const [vehicleEditingId, setVehicleEditingId] = useState<string | null>(null);
   const [existingImageUrl, setExistingImageUrl] = useState("");
@@ -639,28 +691,170 @@ async function loadAllData() {
     });
   }, [members]);
 
-  const todayMemberCount = joinedTodayMembers.length;
-  const weeklyMemberCount = membersThisWeek.length;
+ const todayMemberCount = joinedTodayMembers.length;
+const weeklyMemberCount = membersThisWeek.length;
 
-  const attendanceByEmployee = useMemo(() => {
-    const latest: Record<string, AttendanceRecord> = {};
-    for (const record of attendanceRecords) {
-      if (!latest[record.employee_id]) {
-        latest[record.employee_id] = record;
-      }
+const selectedAttendanceDateKey = useMemo(
+  () => formatDateKey(selectedAttendanceDate),
+  [selectedAttendanceDate]
+);
+
+const attendanceByEmployeeAndDate = useMemo(() => {
+  const map: Record<string, Record<string, AttendanceStatus>> = {};
+
+  for (const record of attendanceRecords) {
+    if (!map[record.employee_id]) {
+      map[record.employee_id] = {};
     }
-    return latest;
-  }, [attendanceRecords]);
 
-  const attendanceSummary = useMemo(() => {
-    const values = Object.values(attendanceByEmployee).map((item) => item.status);
-    return {
-      present: values.filter((v) => v === "present").length,
-      late: values.filter((v) => v === "late").length,
-      absent: values.filter((v) => v === "absent").length,
-      off: values.filter((v) => v === "off").length,
+    map[record.employee_id][record.attendance_date] = record.status;
+  }
+
+  return map;
+}, [attendanceRecords]);
+
+const filteredAttendanceRecords = useMemo(() => {
+  return attendanceRecords.filter((record) => {
+    const matchesMonth = record.attendance_date.startsWith(attendanceMonthFilter);
+    const matchesEmployee =
+      attendanceEmployeeFilter === "all" ||
+      record.employee_id === attendanceEmployeeFilter;
+    const matchesStatus =
+      attendanceStatusFilter === "all" ||
+      record.status === attendanceStatusFilter;
+
+    return matchesMonth && matchesEmployee && matchesStatus;
+  });
+}, [
+  attendanceRecords,
+  attendanceMonthFilter,
+  attendanceEmployeeFilter,
+  attendanceStatusFilter,
+]);
+
+
+
+
+
+const attendanceSummary = useMemo(() => {
+  const summary = {
+    present: 0,
+    late: 0,
+    absent: 0,
+    off: 0,
+  };
+
+  employees.forEach((employee) => {
+    const status =
+      attendanceByEmployeeAndDate[employee.id]?.[selectedAttendanceDateKey];
+
+    if (!status) return;
+
+    if (status === "present") summary.present += 1;
+    if (status === "late") summary.late += 1;
+    if (status === "absent") summary.absent += 1;
+    if (status === "off") summary.off += 1;
+  });
+
+  return summary;
+}, [employees, attendanceByEmployeeAndDate, selectedAttendanceDateKey]);
+
+
+
+const attendanceAnalytics = useMemo(() => {
+  const summaryByEmployee: Record<
+    string,
+    {
+      name: string;
+      role: string;
+      present: number;
+      late: number;
+      absent: number;
+      off: number;
+      total: number;
+    }
+  > = {};
+
+  employees.forEach((employee) => {
+    if (
+      attendanceEmployeeFilter !== "all" &&
+      employee.id !== attendanceEmployeeFilter
+    ) {
+      return;
+    }
+
+    summaryByEmployee[employee.id] = {
+      name: employee.full_name,
+      role: employee.role,
+      present: 0,
+      late: 0,
+      absent: 0,
+      off: 0,
+      total: 0,
     };
-  }, [attendanceByEmployee]);
+  });
+
+  filteredAttendanceRecords.forEach((record) => {
+    const employee = summaryByEmployee[record.employee_id];
+    if (!employee) return;
+
+    if (record.status === "present") employee.present += 1;
+    if (record.status === "late") employee.late += 1;
+    if (record.status === "absent") employee.absent += 1;
+    if (record.status === "off") employee.off += 1;
+
+    employee.total += 1;
+  });
+
+  return Object.entries(summaryByEmployee)
+    .map(([employeeId, stats]) => ({
+      employeeId,
+      ...stats,
+      attendanceRate:
+        stats.total > 0
+          ? Math.round(((stats.present + stats.late) / stats.total) * 100)
+          : 0,
+    }))
+    .sort((a, b) => b.attendanceRate - a.attendanceRate);
+}, [
+  employees,
+  filteredAttendanceRecords,
+  attendanceEmployeeFilter,
+]);
+
+
+ const monthlyAttendanceTotals = useMemo(() => {
+  const monthly: Record<
+    string,
+    { present: number; late: number; absent: number; off: number }
+  > = {};
+
+  filteredAttendanceRecords.forEach((record) => {
+    const monthKey = record.attendance_date.slice(0, 7);
+
+    if (!monthly[monthKey]) {
+      monthly[monthKey] = { present: 0, late: 0, absent: 0, off: 0 };
+    }
+
+    monthly[monthKey][record.status] += 1;
+  });
+
+  return Object.entries(monthly)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, values]) => ({
+      month,
+      ...values,
+    }));
+}, [filteredAttendanceRecords]);
+
+
+  const filteredPurchaseHistory = useMemo(() => {
+  if (purchaseHistoryFilter === "all") return purchaseHistory;
+
+  return purchaseHistory.filter(
+    (item) => item.booking_type === purchaseHistoryFilter
+  );
+}, [purchaseHistory, purchaseHistoryFilter]);
 
   async function loadVehicles() {
     try {
@@ -735,27 +929,31 @@ async function loadAllData() {
   try {
     const { data, error } = await supabase
       .from("bookings")
-      .select(`
-        id,
-        booking_type,
-        full_name,
-        email,
-        phone,
-        start_date,
-        end_date,
-        pickup_location,
-        total_amount,
-        status,
-        created_at,
-        vehicle_id,
-        vehicles (
-          title,
-          brand,
-          model,
-          year,
-          image_url
-        )
-      `)
+     .select(`
+  id,
+  booking_type,
+  full_name,
+  email,
+  phone,
+  start_date,
+  end_date,
+  pickup_location,
+  total_amount,
+  status,
+  created_at,
+  vehicle_id,
+  chauffeur_required,
+  chauffeur_name,
+  chauffeur_phone,
+  pickup_time,
+  vehicles (
+    title,
+    brand,
+    model,
+    year,
+    image_url
+  )
+`)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -859,37 +1057,63 @@ async function loadAllData() {
     return true;
   }
 
-  function getStoragePathFromPublicUrl(url: string | null) {
-    if (!url) return "";
-    const marker = `/storage/v1/object/public/${BUCKET}/`;
-    const index = url.indexOf(marker);
-    if (index === -1) return "";
-    return decodeURIComponent(url.slice(index + marker.length));
-  }
 
-  async function uploadImage(file: File) {
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `vehicles/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+function getStoragePathFromPublicUrl(url: string | null, bucket: string) {
+  if (!url) return "";
+  const marker = `/storage/v1/object/public/${bucket}/`;
+  const index = url.indexOf(marker);
+  if (index === -1) return "";
+  return decodeURIComponent(url.slice(index + marker.length));
+}
 
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET)
-      .upload(path, file, { upsert: false });
+async function uploadVehicleImage(file: File) {
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `vehicles/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    if (uploadError) throw uploadError;
+  const { error: uploadError } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, file, { upsert: false });
 
-    const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  if (uploadError) throw uploadError;
 
-    return {
-      image_url: data.publicUrl,
-      image_path: path,
-    };
-  }
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
 
-  async function deleteStorageFile(path: string | null) {
-    if (!path) return;
-    const { error } = await supabase.storage.from(BUCKET).remove([path]);
-    if (error) throw error;
-  }
+  return {
+    image_url: data.publicUrl,
+    image_path: path,
+  };
+}
+
+async function uploadEmployeeImage(file: File) {
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `employees/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(EMPLOYEE_BUCKET)
+    .upload(path, file, { upsert: false });
+
+  if (uploadError) throw uploadError;
+
+  const { data } = supabase.storage.from(EMPLOYEE_BUCKET).getPublicUrl(path);
+
+  return {
+    image_url: data.publicUrl,
+    image_path: path,
+  };
+}
+
+async function deleteVehicleStorageFile(path: string | null) {
+  if (!path) return;
+  const { error } = await supabase.storage.from(BUCKET).remove([path]);
+  if (error) throw error;
+}
+
+async function deleteEmployeeStorageFile(path: string | null) {
+  if (!path) return;
+  const { error } = await supabase.storage.from(EMPLOYEE_BUCKET).remove([path]);
+  if (error) throw error;
+}
+
 
   async function handleVehicleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -904,18 +1128,18 @@ async function loadAllData() {
       const oldImagePath = existingImagePath || null;
 
       if (removeCurrentImage && oldImagePath) {
-        await deleteStorageFile(oldImagePath);
+        await deleteVehicleStorageFile(oldImagePath);
         image_url = null;
         image_path = null;
       }
 
       if (imageFile) {
-        const uploaded = await uploadImage(imageFile);
+        const uploaded = await uploadVehicleImage(imageFile);
         image_url = uploaded.image_url;
         image_path = uploaded.image_path;
 
         if (oldImagePath && oldImagePath !== uploaded.image_path) {
-          await deleteStorageFile(oldImagePath);
+          await deleteVehicleStorageFile(oldImagePath);
         }
       }
 
@@ -986,107 +1210,178 @@ async function loadAllData() {
     }
   }
 
-  async function handleEmployeeSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setMessage("");
+ async function handleEmployeeSubmit(e: React.FormEvent) {
+  e.preventDefault();
+  setMessage("");
 
-    if (!validateEmployeeForm()) return;
-    setLoading(true);
+  if (!validateEmployeeForm()) return;
+  setLoading(true);
 
-    try {
-      const payload = {
-        full_name: employeeForm.name.trim(),
-        role: employeeForm.role,
-        phone: employeeForm.phone.trim(),
-        email: employeeForm.email.trim().toLowerCase(),
-        status: employeeForm.status,
-      };
+  try {
+    let image_url: string | null = null;
+    let image_path: string | null = null;
 
-      const { error } = await supabase.from("employees").insert(payload);
-      if (error) throw error;
-
-      setEmployeeForm(emptyEmployeeForm);
-      await loadEmployees();
-      setMessage(t.employeeAdded);
-    } catch (error) {
-      console.error("Employee submit error:", error);
-      setMessage(t.employeeAddFailed);
-    } finally {
-      setLoading(false);
+    if (employeeImageFile) {
+      const uploaded = await uploadEmployeeImage(employeeImageFile);
+      image_url = uploaded.image_url;
+      image_path = uploaded.image_path;
     }
+
+    const payload = {
+      full_name: employeeForm.name.trim(),
+      role: employeeForm.role,
+      phone: employeeForm.phone.trim(),
+      email: employeeForm.email.trim().toLowerCase(),
+      status: employeeForm.status,
+      image_url,
+      image_path,
+      is_chauffeur: employeeForm.role === "Chauffeur" || employeeForm.is_chauffeur,
+      is_available: true,
+    };
+
+    const { error } = await supabase.from("employees").insert(payload);
+    if (error) throw error;
+
+    setEmployeeForm(emptyEmployeeForm);
+    setEmployeeImageFile(null);
+    await loadEmployees();
+    setMessage(t.employeeAdded);
+  } catch (error) {
+    console.error("Employee submit error:", error);
+    setMessage(t.employeeAddFailed);
+  } finally {
+    setLoading(false);
   }
+}
 
-  async function handleEmployeeDelete(employeeId: string) {
-    setLoading(true);
-    setMessage("");
+  async function handleEmployeeDelete(employee: Employee) {
+  setLoading(true);
+  setMessage("");
 
-    try {
-      const { error } = await supabase
-        .from("employees")
-        .delete()
-        .eq("id", employeeId);
+  try {
+    const imagePath =
+      employee.image_path || getStoragePathFromPublicUrl(employee.image_url, EMPLOYEE_BUCKET);
 
-      if (error) throw error;
-
-      await loadEmployees();
-      await loadAttendance();
-      setMessage(t.employeeRemoved);
-    } catch (error) {
-      console.error("Employee delete error:", error);
-      setMessage(t.employeeRemoveFailed);
-    } finally {
-      setLoading(false);
+    if (imagePath) {
+      await deleteEmployeeStorageFile(imagePath);
     }
+
+    const { error } = await supabase
+      .from("employees")
+      .delete()
+      .eq("id", employee.id);
+
+    if (error) throw error;
+
+    await loadEmployees();
+    await loadAttendance();
+    setMessage(t.employeeRemoved);
+  } catch (error) {
+    console.error("Employee delete error:", error);
+    setMessage(t.employeeRemoveFailed);
+  } finally {
+    setLoading(false);
   }
+}
 
-  async function handleAttendanceChange(employeeId: string, status: AttendanceStatus) {
-    setLoading(true);
-    setMessage("");
 
-    try {
-      const payload = {
+
+
+async function handleAttendanceChangeForDate(
+  employeeId: string,
+  status: AttendanceStatus,
+  attendanceDate: string
+) {
+  setLoading(true);
+  setMessage("");
+
+  try {
+    const { error } = await supabase.from("attendance").upsert(
+      {
         employee_id: employeeId,
+        attendance_date: attendanceDate,
         status,
-        attendance_date: todayDateString(),
-      };
+      },
+      {
+        onConflict: "employee_id,attendance_date",
+      }
+    );
 
-      const { error } = await supabase.from("attendance").insert(payload);
-      if (error) throw error;
+    if (error) throw error;
 
-      await loadAttendance();
-      setMessage(t.attendanceUpdated);
-    } catch (error) {
-      console.error("Attendance update error:", error);
-      setMessage(t.attendanceFailed);
-    } finally {
-      setLoading(false);
-    }
+    await loadAttendance();
+    setMessage("Attendance saved successfully.");
+  } catch (error) {
+    console.error("Attendance save error:", error);
+    setMessage(t.attendanceFailed);
+  } finally {
+    setLoading(false);
   }
+}
 
-  async function handleSettingsSave(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
+function handleExportAttendanceCsv() {
+  const rows = filteredAttendanceRecords.map((record) => {
+    const employee = employees.find((emp) => emp.id === record.employee_id);
 
-    try {
-      const payload = {
-        id: settings.id || "default",
-        theme: settings.theme,
-        language: settings.language,
-      };
+    return {
+      date: record.attendance_date,
+      employee_name: employee?.full_name || "Unknown",
+      role: employee?.role || "Unknown",
+      status: record.status,
+    };
+  });
 
-      const { error } = await supabase.from("settings").upsert(payload);
-      if (error) throw error;
+  const headers = ["Date", "Employee Name", "Role", "Status"];
 
-      await loadSettings();
-      setMessage(t.settingsUpdated);
-    } catch (error) {
-      console.error("Settings save error:", error);
-      setMessage(t.settingsFailed);
-    } finally {
-      setLoading(false);
-    }
+  const csvContent = [
+    headers.join(","),
+    ...rows.map((row) =>
+      [row.date, row.employee_name, row.role, row.status]
+        .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+        .join(",")
+    ),
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", `attendance-report-${attendanceMonthFilter}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+}
+
+async function handleSettingsSave(e: React.FormEvent) {
+  e.preventDefault();
+  setLoading(true);
+  setMessage("");
+
+  try {
+    const payload = {
+      id: settings.id || "default",
+      theme: settings.theme,
+      language: settings.language,
+    };
+
+    const { error } = await supabase.from("settings").upsert(payload);
+    if (error) throw error;
+
+    await loadSettings();
+    setMessage(t.settingsUpdated);
+  } catch (error) {
+    console.error("Settings save error:", error);
+    setMessage(t.settingsFailed);
+  } finally {
+    setLoading(false);
   }
+}
+
+  
+
 
   function handleVehicleEdit(vehicle: Vehicle) {
     setActiveTab("vehicles");
@@ -1107,7 +1402,7 @@ async function loadAllData() {
     });
     setExistingImageUrl(vehicle.image_url || "");
     setExistingImagePath(
-      vehicle.image_path || getStoragePathFromPublicUrl(vehicle.image_url)
+      vehicle.image_path || getStoragePathFromPublicUrl(vehicle.image_url, BUCKET)
     );
     setImageFile(null);
     setRemoveCurrentImage(false);
@@ -1124,10 +1419,10 @@ async function loadAllData() {
 
     try {
       const imagePath =
-        vehicle.image_path || getStoragePathFromPublicUrl(vehicle.image_url);
+            vehicle.image_path || getStoragePathFromPublicUrl(vehicle.image_url, BUCKET);
 
       if (imagePath) {
-        await deleteStorageFile(imagePath);
+        await deleteVehicleStorageFile(imagePath);
       }
 
       const { error } = await supabase
@@ -1602,6 +1897,13 @@ async function loadAllData() {
   }
 
   function renderEmployeesTab() {
+
+    const filteredEmployees =
+  employeeFilter === "all"
+    ? employees
+    : employees.filter((employee) => employee.role === employeeFilter);
+
+
     return (
       <div className="grid gap-8 xl:grid-cols-[380px_1fr]">
         <section className={cardClass}>
@@ -1619,18 +1921,26 @@ async function loadAllData() {
             />
 
             <select
-              name="role"
-              value={employeeForm.role}
-              onChange={handleEmployeeChange}
-              className={selectClass}
-            >
-              <option value="Driver">Driver</option>
-              <option value="Operations Manager">Operations Manager</option>
-              <option value="Sales Manager">Sales Manager</option>
-              <option value="Fleet Supervisor">Fleet Supervisor</option>
-              <option value="Customer Relations">Customer Relations</option>
-              <option value="Admin Staff">Admin Staff</option>
-            </select>
+                    name="role"
+                    value={employeeForm.role}
+                    onChange={(e) => {
+                      const value = e.target.value as EmployeeRole;
+                      setEmployeeForm((prev) => ({
+                        ...prev,
+                        role: value,
+                        is_chauffeur: value === "Chauffeur",
+                      }));
+                    }}
+                    className={selectClass}
+                  >
+                    <option value="Chauffeur">Chauffeur</option>
+                    <option value="Driver">Driver</option>
+                    <option value="Operations Manager">Operations Manager</option>
+                    <option value="Sales Manager">Sales Manager</option>
+                    <option value="Fleet Supervisor">Fleet Supervisor</option>
+                    <option value="Customer Relations">Customer Relations</option>
+                    <option value="Admin Staff">Admin Staff</option>
+                  </select>
 
             <input
               name="phone"
@@ -1658,16 +1968,67 @@ async function loadAllData() {
               <option value="off">{t.offDuty}</option>
             </select>
 
+
+
+            <div>
+  <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+    Employee Image
+  </label>
+  <input
+    type="file"
+    accept="image/*"
+    onChange={(e) => setEmployeeImageFile(e.target.files?.[0] || null)}
+    className={inputClass}
+  />
+</div>
+
             <button type="submit" disabled={loading} className={primaryButtonClass}>
               {t.addEmployee}
             </button>
           </form>
         </section>
 
-        <section className={cardClass}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {t.employeeList}
-          </h2>
+       <section className={cardClass}>
+  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+    {t.employeeList}
+  </h2>
+
+  <div className="mt-6 flex flex-wrap gap-2">
+    <button
+      type="button"
+      onClick={() => setEmployeeFilter("all")}
+      className={`rounded-full px-4 py-2 text-sm font-medium ${
+        employeeFilter === "all"
+          ? "bg-black text-white dark:bg-white dark:text-black"
+          : "bg-gray-100 text-gray-800 dark:bg-[#21262d] dark:text-gray-200"
+      }`}
+    >
+      All
+    </button>
+
+    {[
+      "Chauffeur",
+      "Driver",
+      "Operations Manager",
+      "Sales Manager",
+      "Fleet Supervisor",
+      "Customer Relations",
+      "Admin Staff",
+    ].map((role) => (
+      <button
+        key={role}
+        type="button"
+        onClick={() => setEmployeeFilter(role as EmployeeRole)}
+        className={`rounded-full px-4 py-2 text-sm font-medium ${
+          employeeFilter === role
+            ? "bg-black text-white dark:bg-white dark:text-black"
+            : "bg-gray-100 text-gray-800 dark:bg-[#21262d] dark:text-gray-200"
+        }`}
+      >
+        {role}
+      </button>
+    ))}
+  </div>
 
           {employeesLoadFailed ? (
             <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
@@ -1679,30 +2040,45 @@ async function loadAllData() {
             </div>
           ) : (
             <div className="mt-6 grid gap-4 md:grid-cols-2">
-              {employees.map((employee) => (
+              {filteredEmployees.map((employee) => (
                 <div
                   key={employee.id}
                   className="rounded-3xl border border-gray-200 bg-gray-50 p-5 dark:border-[#30363d] dark:bg-[#21262d]"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                        {employee.full_name}
-                      </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {employee.role}
-                      </p>
-                    </div>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        employee.status === "active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-200 text-gray-700"
-                      }`}
-                    >
-                      {employee.status === "active" ? t.active : t.offDuty}
-                    </span>
-                  </div>
+  <div className="flex items-center gap-4">
+    <img
+      src={employee.image_url || "/placeholder-user.jpg"}
+      alt={employee.full_name}
+      className="h-16 w-16 rounded-2xl object-cover border border-gray-200 dark:border-[#30363d]"
+    />
+
+    <div>
+      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+        {employee.full_name}
+      </h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400">
+        {employee.role}
+      </p>
+
+      {employee.is_chauffeur && (
+        <p className="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">
+          {employee.is_available ? "Available Chauffeur" : "Assigned / Busy"}
+        </p>
+      )}
+    </div>
+  </div>
+
+  <span
+    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+      employee.status === "active"
+        ? "bg-green-100 text-green-700"
+        : "bg-gray-200 text-gray-700"
+    }`}
+  >
+    {employee.status === "active" ? t.active : t.offDuty}
+  </span>
+</div>
 
                   <div className="mt-4 space-y-2 text-sm text-gray-600 dark:text-gray-300">
                     <p>{employee.phone}</p>
@@ -1712,7 +2088,7 @@ async function loadAllData() {
                   <div className="mt-4">
                     <button
                       type="button"
-                      onClick={() => void handleEmployeeDelete(employee.id)}
+                      onClick={() => void handleEmployeeDelete(employee)}
                       className="rounded-2xl border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-600 dark:border-red-900/40 dark:bg-[#0d1117] dark:text-red-400"
                     >
                       {t.removeEmployee}
@@ -1727,65 +2103,169 @@ async function loadAllData() {
     );
   }
 
-  function renderAttendanceTab() {
-    return (
-      <div className="grid gap-8 xl:grid-cols-[320px_1fr]">
-        <section className={cardClass}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {t.attendanceSummary}
-          </h2>
-          <div className="mt-6 space-y-4">
-            <div className={softCardClass}>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t.present}</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
-                {attendanceSummary.present}
-              </p>
-            </div>
-            <div className={softCardClass}>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t.late}</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
-                {attendanceSummary.late}
-              </p>
-            </div>
-            <div className={softCardClass}>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t.absent}</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
-                {attendanceSummary.absent}
-              </p>
-            </div>
-            <div className={softCardClass}>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t.off}</p>
-              <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
-                {attendanceSummary.off}
-              </p>
-            </div>
+function renderAttendanceTab() {
+  return (
+    <div className="grid gap-8 xl:grid-cols-[360px_1fr]">
+      <section className={cardClass}>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          Attendance Calendar
+        </h2>
+
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          Select any day, month, or year to mark attendance.
+        </p>
+
+        <div className="mt-6 overflow-hidden rounded-3xl border border-gray-200 bg-white p-4 dark:border-[#30363d] dark:bg-[#161b22]">
+          <DayPicker
+            mode="single"
+            selected={selectedAttendanceDate}
+            onSelect={(date) => {
+              if (date) setSelectedAttendanceDate(date);
+            }}
+          />
+        </div>
+
+        <div className="mt-6 space-y-4">
+          <div className={softCardClass}>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Selected Date</p>
+            <p className="mt-1 text-lg font-bold text-gray-900 dark:text-gray-100">
+              {formatReadableDate(selectedAttendanceDate)}
+            </p>
           </div>
-        </section>
 
-        <section className={cardClass}>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {t.markAttendance}
-          </h2>
+          <div className={softCardClass}>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t.present}</p>
+            <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {attendanceSummary.present}
+            </p>
+          </div>
 
-          {attendanceLoadFailed || employeesLoadFailed ? (
-            <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
-              {t.failedLoadAttendance}
-            </div>
-          ) : employees.length === 0 ? (
-            <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-[#30363d] dark:text-gray-400">
-              {t.noEmployeesAttendance}
-            </div>
-          ) : (
-            <div className="mt-6 space-y-4">
-              {employees.map((employee) => {
-                const employeeAttendance =
-                  attendanceByEmployee[employee.id]?.status || "present";
+          <div className={softCardClass}>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t.late}</p>
+            <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {attendanceSummary.late}
+            </p>
+          </div>
 
-                return (
-                  <div
-                    key={employee.id}
-                    className="flex flex-col gap-4 rounded-3xl border border-gray-200 bg-gray-50 p-5 md:flex-row md:items-center md:justify-between dark:border-[#30363d] dark:bg-[#21262d]"
-                  >
+          <div className={softCardClass}>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t.absent}</p>
+            <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {attendanceSummary.absent}
+            </p>
+          </div>
+
+          <div className={softCardClass}>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{t.off}</p>
+            <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {attendanceSummary.off}
+            </p>
+          </div>
+        </div>
+      </section>
+
+     <section className={cardClass}>
+  <div className="mb-6">
+    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      {t.markAttendance}
+    </h2>
+    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+      {formatReadableDate(selectedAttendanceDate)}
+    </p>
+
+    <div className="mt-6 grid gap-4 md:grid-cols-4">
+      <div>
+        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Filter by Month
+        </label>
+        <input
+          type="month"
+          value={attendanceMonthFilter}
+          onChange={(e) => setAttendanceMonthFilter(e.target.value)}
+          className={inputClass}
+        />
+      </div>
+
+      <div>
+        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Filter by Employee
+        </label>
+        <select
+          value={attendanceEmployeeFilter}
+          onChange={(e) => setAttendanceEmployeeFilter(e.target.value)}
+          className={selectClass}
+        >
+          <option value="all">All Employees</option>
+          {employees.map((employee) => (
+            <option key={employee.id} value={employee.id}>
+              {employee.full_name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Filter by Status
+        </label>
+        <select
+          value={attendanceStatusFilter}
+          onChange={(e) =>
+            setAttendanceStatusFilter(e.target.value as "all" | AttendanceStatus)
+          }
+          className={selectClass}
+        >
+          <option value="all">All Statuses</option>
+          <option value="present">{t.present}</option>
+          <option value="late">{t.late}</option>
+          <option value="absent">{t.absent}</option>
+          <option value="off">{t.off}</option>
+        </select>
+      </div>
+
+      <div className="flex items-end">
+        <button
+          type="button"
+          onClick={handleExportAttendanceCsv}
+          className="w-full rounded-2xl bg-black px-5 py-3 font-semibold text-white hover:opacity-90 dark:bg-white dark:text-black"
+        >
+          Export CSV
+        </button>
+      </div>
+    </div>
+  </div>
+
+        {attendanceLoadFailed || employeesLoadFailed ? (
+          <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
+            {t.failedLoadAttendance}
+          </div>
+        ) : employees.length === 0 ? (
+          <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-[#30363d] dark:text-gray-400">
+            {t.noEmployeesAttendance}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {employees
+  .filter(
+    (employee) =>
+      attendanceEmployeeFilter === "all" ||
+      employee.id === attendanceEmployeeFilter
+  )
+  .map((employee) => {
+              const currentStatus =
+                attendanceByEmployeeAndDate[employee.id]?.[selectedAttendanceDateKey] || "";
+
+              return (
+                <div
+                  key={employee.id}
+                  className="flex flex-col gap-4 rounded-3xl border border-gray-200 bg-gray-50 p-5 md:flex-row md:items-center md:justify-between dark:border-[#30363d] dark:bg-[#21262d]"
+                >
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={employee.image_url || "/placeholder-user.jpg"}
+                      alt={employee.full_name}
+                      className="h-14 w-14 rounded-2xl border border-gray-200 object-cover dark:border-[#30363d]"
+                    />
+
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
                         {employee.full_name}
@@ -1794,42 +2274,125 @@ async function loadAllData() {
                         {employee.role}
                       </p>
                     </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${attendanceBadgeClass(
-                          employeeAttendance
-                        )}`}
-                      >
-                        {attendanceLabel(employeeAttendance)}
-                      </span>
-
-                      <select
-                        value={employeeAttendance}
-                        onChange={(e) =>
-                          void handleAttendanceChange(
-                            employee.id,
-                            e.target.value as AttendanceStatus
-                          )
-                        }
-                        className={selectClass}
-                      >
-                        <option value="present">{t.present}</option>
-                        <option value="late">{t.late}</option>
-                        <option value="absent">{t.absent}</option>
-                        <option value="off">{t.off}</option>
-                      </select>
-                    </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      </div>
-    );
-  }
 
+                  <div className="w-full md:w-[220px]">
+                    <select
+                      value={currentStatus}
+                      onChange={(e) =>
+                        void handleAttendanceChangeForDate(
+                          employee.id,
+                          e.target.value as AttendanceStatus,
+                          selectedAttendanceDateKey
+                        )
+                      }
+                      className={selectClass}
+                    >
+                      <option value="">Select status</option>
+                      <option value="present">{t.present}</option>
+                      <option value="late">{t.late}</option>
+                      <option value="absent">{t.absent}</option>
+                      <option value="off">{t.off}</option>
+                    </select>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+
+        <div className="mt-10 border-t pt-6">
+  <h3 className="text-xl font-bold mb-4">Analytics</h3>
+
+  {/* Best performer */}
+  <div className="mb-6">
+    <p className="text-sm text-gray-500">Best Attendance</p>
+    <p className="font-bold text-lg">
+      {attendanceAnalytics[0]?.name || "No data"} (
+      {attendanceAnalytics[0]?.attendanceRate || 0}%)
+    </p>
+  </div>
+
+  {/* Employee stats */}
+  <div className="space-y-4">
+    {attendanceAnalytics.map((emp) => (
+      <div key={emp.employeeId} className="p-4 rounded-2xl bg-gray-50">
+        <p className="font-bold">{emp.name}</p>
+        <p className="text-sm text-gray-500">{emp.role}</p>
+
+        <div className="grid grid-cols-4 gap-2 mt-2 text-sm">
+          <span>P: {emp.present}</span>
+          <span>L: {emp.late}</span>
+          <span>A: {emp.absent}</span>
+          <span>O: {emp.off}</span>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {/* Monthly */}
+  <div className="mt-8">
+    <h4 className="font-bold mb-3">Monthly Trends</h4>
+
+    {monthlyAttendanceTotals.map((m) => {
+      const max = Math.max(m.present, m.late, m.absent, m.off);
+
+      return (
+        <div key={m.month} className="mb-4">
+          <p className="font-medium">{m.month}</p>
+
+         <div className="space-y-2 text-sm">
+  <div>
+    <p className="mb-1 text-xs text-gray-500">Present: {m.present}</p>
+    <div className="h-2 rounded-full bg-gray-200 dark:bg-[#30363d]">
+      <div
+        style={{ width: analyticsBarWidth(m.present, max) }}
+        className="h-2 rounded-full bg-green-500"
+      />
+    </div>
+  </div>
+
+  <div>
+    <p className="mb-1 text-xs text-gray-500">Late: {m.late}</p>
+    <div className="h-2 rounded-full bg-gray-200 dark:bg-[#30363d]">
+      <div
+        style={{ width: analyticsBarWidth(m.late, max) }}
+        className="h-2 rounded-full bg-yellow-500"
+      />
+    </div>
+  </div>
+
+  <div>
+    <p className="mb-1 text-xs text-gray-500">Absent: {m.absent}</p>
+    <div className="h-2 rounded-full bg-gray-200 dark:bg-[#30363d]">
+      <div
+        style={{ width: analyticsBarWidth(m.absent, max) }}
+        className="h-2 rounded-full bg-red-500"
+      />
+    </div>
+  </div>
+
+  <div>
+    <p className="mb-1 text-xs text-gray-500">Off: {m.off}</p>
+    <div className="h-2 rounded-full bg-gray-200 dark:bg-[#30363d]">
+      <div
+        style={{ width: analyticsBarWidth(m.off, max) }}
+        className="h-2 rounded-full bg-gray-500"
+      />
+    </div>
+  </div>
+</div>
+        </div>
+      );
+    })}
+  </div>
+</div>
+
+      </section>
+    </div>
+  );
+}
   function renderMembersTab() {
     return (
       <div className="space-y-6">
@@ -1910,119 +2473,221 @@ async function loadAllData() {
     );
   }
 
-  function renderPurchaseHistoryTab() {
+
+  function purchaseStatusBadgeClass(status: string) {
+  const value = status.toLowerCase();
+
+  if (value === "confirmed" || value === "paid" || value === "completed") {
+    return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
+  }
+
+  if (value === "pending") {
+    return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
+  }
+
+  if (value === "cancelled" || value === "failed") {
+    return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+  }
+
+  return "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+}
+
+
+ function renderPurchaseHistoryTab() {
   return (
     <div className="space-y-6">
       <section className={cardClass}>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          {t.purchase_history}
-        </h2>
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t.purchase_history}
+          </h2>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setPurchaseHistoryFilter("all")}
+              className={`rounded-full px-4 py-2 text-sm font-medium ${
+                purchaseHistoryFilter === "all"
+                  ? "bg-black text-white dark:bg-white dark:text-black"
+                  : "bg-gray-100 text-gray-800 dark:bg-[#21262d] dark:text-gray-200"
+              }`}
+            >
+              All
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPurchaseHistoryFilter("rent")}
+              className={`rounded-full px-4 py-2 text-sm font-medium ${
+                purchaseHistoryFilter === "rent"
+                  ? "bg-black text-white dark:bg-white dark:text-black"
+                  : "bg-gray-100 text-gray-800 dark:bg-[#21262d] dark:text-gray-200"
+              }`}
+            >
+              Rentals
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPurchaseHistoryFilter("buy")}
+              className={`rounded-full px-4 py-2 text-sm font-medium ${
+                purchaseHistoryFilter === "buy"
+                  ? "bg-black text-white dark:bg-white dark:text-black"
+                  : "bg-gray-100 text-gray-800 dark:bg-[#21262d] dark:text-gray-200"
+              }`}
+            >
+              Purchases
+            </button>
+          </div>
+        </div>
 
         {purchaseHistoryLoadFailed ? (
-          <div className="mt-6 rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
+          <div className="rounded-2xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
             Failed to load purchase history.
           </div>
-        ) : purchaseHistory.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-[#30363d] dark:text-gray-400">
-            No rentals or purchases found.
+        ) : filteredPurchaseHistory.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-[#30363d] dark:text-gray-400">
+            No records found for this filter.
           </div>
         ) : (
-          <div className="mt-6 grid gap-4">
-            {purchaseHistory.map((item) => {
-  const vehicleInfo = Array.isArray(item.vehicles)
-    ? item.vehicles[0]
-    : item.vehicles;
+          <div className="grid gap-5">
+            {filteredPurchaseHistory.map((item) => {
+              const vehicleInfo = Array.isArray(item.vehicles)
+                ? item.vehicles[0]
+                : item.vehicles;
 
-  return (
-              <div
-                key={item.id}
-                className="rounded-3xl border border-gray-200 bg-gray-50 p-5 dark:border-[#30363d] dark:bg-[#21262d]"
-              >
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div className="flex gap-4">
-                   {vehicleInfo?.image_url ? (
-                      <img
-                        src={vehicleInfo.image_url}
-                        alt={vehicleInfo.title}
-                        className="h-24 w-32 rounded-2xl object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-24 w-32 items-center justify-center rounded-2xl bg-gray-200 text-sm text-gray-500 dark:bg-[#30363d] dark:text-gray-400">
-                        No image
-                      </div>
-                    )}
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-3xl border border-gray-200 bg-gray-50 p-5 dark:border-[#30363d] dark:bg-[#21262d]"
+                >
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                      {vehicleInfo?.image_url ? (
+                        <img
+                          src={vehicleInfo.image_url}
+                          alt={vehicleInfo.title}
+                          className="h-28 w-full rounded-2xl object-cover sm:w-40"
+                        />
+                      ) : (
+                        <div className="flex h-28 w-full items-center justify-center rounded-2xl bg-gray-200 text-sm text-gray-500 dark:bg-[#30363d] dark:text-gray-400 sm:w-40">
+                          No image
+                        </div>
+                      )}
 
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                        {item.full_name}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        {item.email}
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        {item.phone}
-                      </p>
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                              {item.full_name}
+                            </h3>
 
-                      <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                        <p>
-                          Vehicle:{" "}
-                          <span className="font-medium text-gray-800 dark:text-gray-200">
-                           {vehicleInfo
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-semibold ${purchaseStatusBadgeClass(
+                                item.status
+                              )}`}
+                            >
+                              {item.status}
+                            </span>
+
+                            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold capitalize text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                              {item.booking_type === "rent" ? "Rental" : "Purchase"}
+                            </span>
+                          </div>
+
+                          <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                            {item.email}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">
+                            {item.phone}
+                          </p>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+                            <p className="text-xs text-gray-400">Vehicle</p>
+                            <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                              {vehicleInfo
                                 ? `${vehicleInfo.title} (${vehicleInfo.brand} ${vehicleInfo.model} ${vehicleInfo.year})`
                                 : "Unknown vehicle"}
-                          </span>
-                        </p>
-                        <p>
-                          Type:{" "}
-                          <span className="font-medium capitalize text-gray-800 dark:text-gray-200">
-                            {item.booking_type}
-                          </span>
-                        </p>
-                        <p>
-                          Status:{" "}
-                          <span className="font-medium capitalize text-gray-800 dark:text-gray-200">
-                            {item.status}
-                          </span>
-                        </p>
-                        {item.booking_type === "rent" && (
-                          <p>
-                            Rental Period:{" "}
-                            <span className="font-medium text-gray-800 dark:text-gray-200">
-                              {item.start_date || "-"} to {item.end_date || "-"}
-                            </span>
-                          </p>
-                        )}
-                        <p>
-                          Pickup Location:{" "}
-                          <span className="font-medium text-gray-800 dark:text-gray-200">
-                            {item.pickup_location || "-"}
-                          </span>
-                        </p>
+                            </p>
+                          </div>
+
+                          <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+                            <p className="text-xs text-gray-400">Pickup Location</p>
+                            <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                              {item.pickup_location || "-"}
+                            </p>
+                          </div>
+
+                          {item.booking_type === "rent" && (
+                            <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+                              <p className="text-xs text-gray-400">Rental Period</p>
+                              <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                                {item.start_date || "-"} to {item.end_date || "-"}
+                              </p>
+                            </div>
+                          )}
+
+                          {item.booking_type === "rent" && (
+                            <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+                              <p className="text-xs text-gray-400">Chauffeur Required</p>
+                              <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                                {item.chauffeur_required ? "Yes" : "No"}
+                              </p>
+                            </div>
+                          )}
+
+                          {item.booking_type === "rent" && item.chauffeur_required && (
+                            <>
+                              <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+                                <p className="text-xs text-gray-400">Chauffeur Name</p>
+                                <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                                  {item.chauffeur_name || "-"}
+                                </p>
+                              </div>
+
+                              <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+                                <p className="text-xs text-gray-400">Chauffeur Phone</p>
+                                <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                                  {item.chauffeur_phone || "-"}
+                                </p>
+                              </div>
+
+                              <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117] sm:col-span-2">
+                                <p className="text-xs text-gray-400">Pickup Time</p>
+                                <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                                  {item.pickup_time || "-"}
+                                </p>
+                              </div>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                                    <div className="rounded-2xl bg-white px-4 py-3 text-right shadow-sm dark:bg-[#0d1117]">
-                    <p className="text-xs text-gray-400">Total Amount</p>
-                    <p className="mt-1 text-xl font-bold text-gray-900 dark:text-gray-100">
-                      ${Number(item.total_amount || 0).toLocaleString()}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {item.created_at
-                        ? new Date(item.created_at).toLocaleString()
-                        : ""}
-                    </p>
+                    <div className="min-w-[180px] rounded-2xl bg-white px-4 py-4 text-right shadow-sm dark:bg-[#0d1117]">
+                      <p className="text-xs text-gray-400">Total Amount</p>
+                      <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
+                        ${Number(item.total_amount || 0).toLocaleString()}
+                      </p>
+                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        {item.created_at
+                          ? new Date(item.created_at).toLocaleString()
+                          : ""}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </section>
-  </div>
-);
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
+  );
 }
+
 
   function renderSettingsTab() {
     return (
@@ -2165,6 +2830,6 @@ async function loadAllData() {
           </div>
         </section>
       </div>
-    </main>
+     </main>
   );
 }
