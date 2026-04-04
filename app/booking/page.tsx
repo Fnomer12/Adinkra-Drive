@@ -141,6 +141,7 @@ export default function BookingPage() {
   const [countryOfBirth, setCountryOfBirth] = useState("");
   const [handoverDocument, setHandoverDocument] = useState("");
   const [notes, setNotes] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -424,6 +425,7 @@ export default function BookingPage() {
         country_of_birth: type === "rent" ? countryOfBirth : null,
         handover_document: type === "rent" ? handoverDocument : null,
         notes: notes.trim() || null,
+        payment_method: paymentMethod,
         unit_price: price,
         total_amount: totalAmount,
         status: "pending",
@@ -435,6 +437,7 @@ export default function BookingPage() {
             : null,
         chauffeur_phone:
           type === "rent" && chauffeurRequired ? selectedChauffeur?.phone ?? null : null,
+          
       };
 
       const response = await fetch("/api/bookings", {
@@ -451,12 +454,14 @@ export default function BookingPage() {
       }
 
       router.push(
-        `/payment?bookingId=${data.booking.id}&title=${encodeURIComponent(
-          title
-        )}&price=${totalAmount}&type=${type}&pickupTime=${encodeURIComponent(
-          pickupTime
-        )}`
-      );
+            `/payment?bookingId=${data.booking.id}
+            &title=${encodeURIComponent(title)}
+            &price=${totalAmount}
+            &type=${type}
+            &email=${encodeURIComponent(email)}
+            &pickupTime=${encodeURIComponent(pickupTime || "")}
+            &paymentMethod=${paymentMethod}` // ✅ ADD THIS
+          );
     } catch (error) {
       console.error("Booking submit error:", error);
       setMessage("Something went wrong while creating the booking.");
@@ -726,6 +731,22 @@ export default function BookingPage() {
               rows={5}
               className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
             />
+
+            <div>
+  <label className="mb-2 block text-sm font-medium text-gray-700">
+    Payment Method
+  </label>
+
+  <select
+    value={paymentMethod}
+    onChange={(e) => setPaymentMethod(e.target.value)}
+    className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+  >
+    <option value="cash">Cash</option>
+    <option value="card">Visa / Card</option>
+    <option value="momo">Mobile Money (MoMo)</option>
+  </select>
+</div>
 
             {message && <p className="text-sm text-red-600">{message}</p>}
 

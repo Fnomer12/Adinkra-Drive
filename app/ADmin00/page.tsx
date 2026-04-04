@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bell, X } from "lucide-react";
+import { Bell, X, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
@@ -578,6 +578,12 @@ const [attendanceStatusFilter, setAttendanceStatusFilter] = useState<
 const [attendanceMonthFilter, setAttendanceMonthFilter] = useState<string>(
   new Date().toISOString().slice(0, 7)
 );
+
+
+const [bookingSearch, setBookingSearch] = useState("");
+
+
+
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [purchaseHistory, setPurchaseHistory] = useState<PurchaseHistoryItem[]>([]);
@@ -848,13 +854,19 @@ const attendanceAnalytics = useMemo(() => {
 }, [filteredAttendanceRecords]);
 
 
-  const filteredPurchaseHistory = useMemo(() => {
-  if (purchaseHistoryFilter === "all") return purchaseHistory;
+ const filteredPurchaseHistory = useMemo(() => {
+  return purchaseHistory.filter((item) => {
+    const matchesType =
+      purchaseHistoryFilter === "all" ||
+      item.booking_type === purchaseHistoryFilter;
 
-  return purchaseHistory.filter(
-    (item) => item.booking_type === purchaseHistoryFilter
-  );
-}, [purchaseHistory, purchaseHistoryFilter]);
+    const matchesSearch =
+      bookingSearch.trim() === "" ||
+      item.id.toLowerCase().includes(bookingSearch.trim().toLowerCase());
+
+    return matchesType && matchesSearch;
+  });
+}, [purchaseHistory, purchaseHistoryFilter, bookingSearch]);
 
   async function loadVehicles() {
     try {
@@ -2493,51 +2505,67 @@ function renderAttendanceTab() {
 }
 
 
- function renderPurchaseHistoryTab() {
+function renderPurchaseHistoryTab() {
   return (
     <div className="space-y-6">
       <section className={cardClass}>
-        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {t.purchase_history}
-          </h2>
+        <div className="mb-6 flex flex-col gap-4">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              {t.purchase_history}
+            </h2>
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setPurchaseHistoryFilter("all")}
-              className={`rounded-full px-4 py-2 text-sm font-medium ${
-                purchaseHistoryFilter === "all"
-                  ? "bg-black text-white dark:bg-white dark:text-black"
-                  : "bg-gray-100 text-gray-800 dark:bg-[#21262d] dark:text-gray-200"
-              }`}
-            >
-              All
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setPurchaseHistoryFilter("all")}
+                className={`rounded-full px-4 py-2 text-sm font-medium ${
+                  purchaseHistoryFilter === "all"
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : "bg-gray-100 text-gray-800 dark:bg-[#21262d] dark:text-gray-200"
+                }`}
+              >
+                All
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setPurchaseHistoryFilter("rent")}
-              className={`rounded-full px-4 py-2 text-sm font-medium ${
-                purchaseHistoryFilter === "rent"
-                  ? "bg-black text-white dark:bg-white dark:text-black"
-                  : "bg-gray-100 text-gray-800 dark:bg-[#21262d] dark:text-gray-200"
-              }`}
-            >
-              Rentals
-            </button>
+              <button
+                type="button"
+                onClick={() => setPurchaseHistoryFilter("rent")}
+                className={`rounded-full px-4 py-2 text-sm font-medium ${
+                  purchaseHistoryFilter === "rent"
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : "bg-gray-100 text-gray-800 dark:bg-[#21262d] dark:text-gray-200"
+                }`}
+              >
+                Rentals
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setPurchaseHistoryFilter("buy")}
-              className={`rounded-full px-4 py-2 text-sm font-medium ${
-                purchaseHistoryFilter === "buy"
-                  ? "bg-black text-white dark:bg-white dark:text-black"
-                  : "bg-gray-100 text-gray-800 dark:bg-[#21262d] dark:text-gray-200"
-              }`}
-            >
-              Purchases
-            </button>
+              <button
+                type="button"
+                onClick={() => setPurchaseHistoryFilter("buy")}
+                className={`rounded-full px-4 py-2 text-sm font-medium ${
+                  purchaseHistoryFilter === "buy"
+                    ? "bg-black text-white dark:bg-white dark:text-black"
+                    : "bg-gray-100 text-gray-800 dark:bg-[#21262d] dark:text-gray-200"
+                }`}
+              >
+                Purchases
+              </button>
+            </div>
+          </div>
+
+          <div className="relative max-w-md">
+            <Search
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              type="text"
+              value={bookingSearch}
+              onChange={(e) => setBookingSearch(e.target.value)}
+              placeholder="Search by Booking ID"
+              className="w-full rounded-2xl border border-gray-300 bg-white py-3 pl-11 pr-4 text-gray-900 outline-none focus:border-black dark:border-[#30363d] dark:bg-[#0d1117] dark:text-gray-200 dark:focus:border-[#58a6ff]"
+            />
           </div>
         </div>
 
@@ -2600,6 +2628,9 @@ function renderAttendanceTab() {
                           </p>
                           <p className="text-sm text-gray-600 dark:text-gray-300">
                             {item.phone}
+                          </p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 break-all">
+                            Booking ID: {item.id}
                           </p>
                         </div>
 
@@ -2686,6 +2717,7 @@ function renderAttendanceTab() {
       </section>
     </div>
   );
+
 }
 
 
