@@ -132,16 +132,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (
-      error instanceof Error &&
-      error.message === "RESEND_API_KEY is missing"
-    ) {
-      return NextResponse.json(
-        { error: "Server email configuration is missing." },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json(
       { error: "Failed to notify members." },
       { status: 500 }
