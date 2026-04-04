@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { resend } from "@/lib/resend";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getResendClient } from "@/lib/resend";
 
 type NotifyPayload = {
   vehicle: {
@@ -20,6 +15,17 @@ type NotifyPayload = {
   };
 };
 
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error("Supabase environment variables are missing.");
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey);
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as NotifyPayload;
@@ -30,6 +36,17 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    const from = process.env.EMAIL_FROM;
+    if (!from) {
+      return NextResponse.json(
+        { error: "Missing EMAIL_FROM environment variable." },
+        { status: 500 }
+      );
+    }
+
+    const supabase = getSupabaseAdmin();
+    const resend = getResendClient();
 
     const { data: members, error: membersError } = await supabase
       .from("members")
@@ -50,14 +67,6 @@ export async function POST(req: NextRequest) {
         message: "No active members to notify.",
         sent: 0,
       });
-    }
-
-    const from = process.env.EMAIL_FROM;
-    if (!from) {
-      return NextResponse.json(
-        { error: "Missing EMAIL_FROM environment variable." },
-        { status: 500 }
-      );
     }
 
     const sendResults = await Promise.allSettled(
@@ -112,6 +121,27 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("notify-members route error:", error);
+
+    if (
+      error instanceof Error &&
+      error.message === "Supabase environment variables are missing."
+    ) {
+      return NextResponse.json(
+        { error: "Server database configuration is missing." },
+        { status: 500 }
+      );
+    }
+
+    if (
+      error instanceof Error &&
+      error.message === "RESEND_API_KEY is missing"
+    ) {
+      return NextResponse.json(
+        { error: "Server email configuration is missing." },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Failed to notify members." },
       { status: 500 }
