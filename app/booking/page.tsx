@@ -110,6 +110,22 @@ function rangesOverlap(
   return aStart <= bEnd && aEnd >= bStart;
 }
 
+
+function formatTimeForDisplay(time: string) {
+  if (!time) return "Not selected";
+
+  const [hourStr, minute] = time.split(":");
+  const hour = Number(hourStr);
+
+  if (Number.isNaN(hour) || !minute) return time;
+
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12;
+
+  return `${String(hour12).padStart(2, "0")}:${minute} ${suffix}`;
+}
+
+
 export default function BookingPage() {
   const router = useRouter();
   const params = useSearchParams();
@@ -453,15 +469,15 @@ export default function BookingPage() {
         return;
       }
 
-      router.push(
-            `/payment?bookingId=${data.booking.id}
-            &title=${encodeURIComponent(title)}
-            &price=${totalAmount}
-            &type=${type}
-            &email=${encodeURIComponent(email)}
-            &pickupTime=${encodeURIComponent(pickupTime || "")}
-            &paymentMethod=${paymentMethod}` // ✅ ADD THIS
-          );
+     router.push(
+          `/payment?bookingId=${data.booking.id}&title=${encodeURIComponent(
+            title
+          )}&price=${totalAmount}&type=${type}&email=${encodeURIComponent(
+            email
+          )}&pickupTime=${encodeURIComponent(
+            pickupTime || ""
+          )}&paymentMethod=${paymentMethod}`
+        );
     } catch (error) {
       console.error("Booking submit error:", error);
       setMessage("Something went wrong while creating the booking.");
@@ -660,11 +676,12 @@ export default function BookingPage() {
                           Pickup time
                         </label>
                         <input
-                          type="time"
-                          value={pickupTime}
-                          onChange={(e) => setPickupTime(e.target.value)}
-                          className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
-                        />
+                              type="time"
+                              value={pickupTime || ""}
+                              onChange={(e) => setPickupTime(e.target.value)}
+                              step="60"
+                              className="w-full rounded-2xl border border-gray-300 px-4 py-3 outline-none focus:border-black"
+                            />
                       </div>
 
                       <div>
@@ -821,8 +838,8 @@ export default function BookingPage() {
                           </p>
                           <p className="text-sm text-gray-500">{selectedChauffeur.phone}</p>
                           <p className="text-sm text-gray-500">
-                            Pickup time: {pickupTime || "Not selected"}
-                          </p>
+                              Pickup time: {formatTimeForDisplay(pickupTime)}
+                            </p>
                           <p className="text-sm font-medium text-green-600">
                             +${chauffeurFee} chauffeur fee
                           </p>

@@ -120,6 +120,8 @@ type PurchaseHistoryItem = {
   chauffeur_name?: string | null;
   chauffeur_phone?: string | null;
   pickup_time?: string | null;
+  payment_method?: "cash" | "card" | "momo" | null;
+  payment_status?: "pending" | "paid" | "failed" | null;
   vehicles?:
     | {
         title: string;
@@ -136,7 +138,6 @@ type PurchaseHistoryItem = {
         image_url: string | null;
       }[]
     | null;
-
 };
 
 
@@ -936,36 +937,37 @@ const attendanceAnalytics = useMemo(() => {
       setMembers([]);
     }
   }
-
-  async function loadPurchaseHistory() {
+async function loadPurchaseHistory() {
   try {
     const { data, error } = await supabase
       .from("bookings")
-     .select(`
-  id,
-  booking_type,
-  full_name,
-  email,
-  phone,
-  start_date,
-  end_date,
-  pickup_location,
-  total_amount,
-  status,
-  created_at,
-  vehicle_id,
-  chauffeur_required,
-  chauffeur_name,
-  chauffeur_phone,
-  pickup_time,
-  vehicles (
-    title,
-    brand,
-    model,
-    year,
-    image_url
-  )
-`)
+      .select(`
+        id,
+        booking_type,
+        full_name,
+        email,
+        phone,
+        start_date,
+        end_date,
+        pickup_location,
+        total_amount,
+        status,
+        created_at,
+        vehicle_id,
+        chauffeur_required,
+        chauffeur_name,
+        chauffeur_phone,
+        pickup_time,
+        payment_method,
+        payment_status,
+        vehicles (
+          title,
+          brand,
+          model,
+          year,
+          image_url
+        )
+      `)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -2505,6 +2507,72 @@ function renderAttendanceTab() {
 }
 
 
+
+function paymentMethodBadgeClass(method?: string | null) {
+  if (method === "card") {
+    return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300";
+  }
+
+  if (method === "momo") {
+    return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300";
+  }
+
+  if (method === "cash") {
+    return "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+  }
+
+  return "bg-gray-100 text-gray-500 dark:bg-[#30363d] dark:text-gray-400";
+}
+
+function paymentStatusBadgeClass(status?: string | null) {
+  if (status === "paid") {
+    return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
+  }
+
+  if (status === "pending") {
+    return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
+  }
+
+  if (status === "failed") {
+    return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+  }
+
+  return "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+}
+
+async function handleMarkPaymentPaid(bookingId: string) {
+  setLoading(true);
+  setMessage("");
+
+  try {
+    const response = await fetch("/api/bookings/update-payment-method", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        bookingId,
+        payment_status: "paid",
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMessage(data.error || "Failed to update payment status.");
+      return;
+    }
+
+    await loadPurchaseHistory();
+    setMessage("Payment marked as paid successfully.");
+  } catch (error) {
+    console.error("Mark payment paid error:", error);
+    setMessage("Something went wrong while updating payment.");
+  } finally {
+    setLoading(false);
+  }
+}
+
 function renderPurchaseHistoryTab() {
   return (
     <div className="space-y-6">
@@ -2621,6 +2689,20 @@ function renderPurchaseHistoryTab() {
                             <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold capitalize text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                               {item.booking_type === "rent" ? "Rental" : "Purchase"}
                             </span>
+
+                            <span
+                                  className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentMethodBadgeClass(
+                                    item.payment_method
+                                  )}`}
+                                >
+                                  {item.payment_method === "card"
+                                    ? "Card"
+                                    : item.payment_method === "momo"
+                                    ? "MoMo"
+                                    : item.payment_method === "cash"
+                                    ? "Cash"
+                                    : "No Payment Method"}
+                                </span>
                           </div>
 
                           <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
@@ -2650,6 +2732,32 @@ function renderPurchaseHistoryTab() {
                               {item.pickup_location || "-"}
                             </p>
                           </div>
+
+                          <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+  <p className="text-xs text-gray-400">Payment Method</p>
+  <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+    {item.payment_method
+      ? item.payment_method === "card"
+        ? "Visa / Card"
+        : item.payment_method === "momo"
+        ? "MoMo"
+        : "Cash"
+      : "Not selected"}
+  </p>
+</div>
+
+<div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+  <p className="text-xs text-gray-400">Payment Status</p>
+  <div className="mt-2">
+    <span
+      className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentStatusBadgeClass(
+        item.payment_status
+      )}`}
+    >
+      {item.payment_status || "unknown"}
+    </span>
+  </div>
+</div>
 
                           {item.booking_type === "rent" && (
                             <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
@@ -2697,17 +2805,55 @@ function renderPurchaseHistoryTab() {
                       </div>
                     </div>
 
-                    <div className="min-w-[180px] rounded-2xl bg-white px-4 py-4 text-right shadow-sm dark:bg-[#0d1117]">
-                      <p className="text-xs text-gray-400">Total Amount</p>
-                      <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        ${Number(item.total_amount || 0).toLocaleString()}
-                      </p>
-                      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        {item.created_at
-                          ? new Date(item.created_at).toLocaleString()
-                          : ""}
-                      </p>
-                    </div>
+                   <div className="min-w-[220px] rounded-2xl bg-white px-4 py-4 text-right shadow-sm dark:bg-[#0d1117]">
+  <p className="text-xs text-gray-400">Total Amount</p>
+  <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
+    ${Number(item.total_amount || 0).toLocaleString()}
+  </p>
+
+  <p className="mt-3 text-xs text-gray-400">Payment Method</p>
+  <div className="mt-2">
+    <span
+      className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentMethodBadgeClass(
+        item.payment_method
+      )}`}
+    >
+      {item.payment_method === "card"
+        ? "Card"
+        : item.payment_method === "momo"
+        ? "MoMo"
+        : item.payment_method === "cash"
+        ? "Cash"
+        : "No Payment Method"}
+    </span>
+  </div>
+
+  <p className="mt-3 text-xs text-gray-400">Payment Status</p>
+  <div className="mt-2">
+    <span
+      className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentStatusBadgeClass(
+        item.payment_status
+      )}`}
+    >
+      {item.payment_status || "unknown"}
+    </span>
+  </div>
+
+  {item.payment_status !== "paid" && (
+    <button
+      type="button"
+      onClick={() => void handleMarkPaymentPaid(item.id)}
+      disabled={loading}
+      className="mt-4 w-full rounded-2xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
+    >
+      Mark as Paid
+    </button>
+  )}
+
+  <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+    {item.created_at ? new Date(item.created_at).toLocaleString() : ""}
+  </p>
+</div>
                   </div>
                 </div>
               );

@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
-import { resend } from "@/lib/resend";
+import { Resend } from "resend";
 import {
   createOtpRecord,
   findAdminByUsername,
   verifyAdminPassword,
   generateOtp,
 } from "@/lib/admin-auth";
+
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is missing");
+  }
+
+  return new Resend(apiKey);
+}
 
 export async function POST(request: Request) {
   try {
@@ -42,7 +52,7 @@ export async function POST(request: Request) {
     }
 
     const otp = generateOtp();
-    await createOtpRecord(admin.id, otp);
+    const resend = getResendClient();
 
     const { error: emailError } = await resend.emails.send({
       from: process.env.ADMIN_FROM_EMAIL || "onboarding@resend.dev",
@@ -59,11 +69,14 @@ export async function POST(request: Request) {
     });
 
     if (emailError) {
+      console.error("Resend email error:", emailError);
       return NextResponse.json(
         { error: "Could not send verification code." },
         { status: 500 }
       );
     }
+
+    await createOtpRecord(admin.id, otp);
 
     return NextResponse.json({
       success: true,
@@ -74,6 +87,17 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Admin login error:", error);
+
+    if (
+      error instanceof Error &&
+      error.message === "RESEND_API_KEY is missing"
+    ) {
+      return NextResponse.json(
+        { error: "Server email configuration is missing." },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Something went wrong during login." },
       { status: 500 }
