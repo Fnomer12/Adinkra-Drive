@@ -1497,7 +1497,7 @@ async function handleSettingsSave(e: React.FormEvent) {
               {t.dashboard}
             </p>
             <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100 md:text-4xl">
-              {t[activeTab]}
+              {t[activeTab as keyof typeof t]}
             </h1>
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
               {t.manage}
@@ -2721,6 +2721,7 @@ function renderPurchaseHistoryTab() {
 }
 
 
+
   function renderSettingsTab() {
     return (
       <div className="grid gap-8 xl:grid-cols-[420px_1fr]">
@@ -2838,7 +2839,7 @@ function renderPurchaseHistoryTab() {
               employees: t.employees,
               attendance: t.attendance,
               members: t.members,
-              purchaseHistory: "Purchase History",
+              purchaseHistory: t.purchase_history,
               settings: t.settings,
               logout: t.logout,
             }}
