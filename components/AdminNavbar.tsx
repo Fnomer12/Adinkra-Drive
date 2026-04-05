@@ -44,6 +44,7 @@ type AdminNavbarProps = {
   desktopSidebarOpen: boolean;
   onDesktopSidebarToggle: () => void;
   onLogout?: () => void;
+  purchaseHistoryCount?: number;
   labels: NavbarLabels;
 };
 
@@ -55,6 +56,7 @@ export default function AdminNavbar({
   desktopSidebarOpen,
   onDesktopSidebarToggle,
   onLogout,
+  purchaseHistoryCount = 0,
   labels,
 }: AdminNavbarProps) {
   const sidebarWidthClass = desktopSidebarOpen ? "lg:w-[340px]" : "lg:w-[110px]";
@@ -73,9 +75,9 @@ export default function AdminNavbar({
   { key: "settings", label: labels.settings, icon: Settings },
 ];
 
-  const navButtonClass = (tab: AdminTab, compact = false) =>
-    [
-      "flex w-full items-center rounded-2xl px-5 py-4 text-sm font-semibold transition-all duration-300",
+ const navButtonClass = (tab: AdminTab, compact = false) =>
+  [
+    "relative flex w-full items-center rounded-2xl px-5 py-4 text-sm font-semibold transition-all duration-300",
       compact ? "justify-center" : "justify-start gap-4",
       activeTab === tab
         ? "bg-white text-black shadow-sm dark:bg-white dark:text-black"
@@ -117,19 +119,25 @@ export default function AdminNavbar({
 
             <div className="space-y-3">
               {navItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => onTabChange(item.key)}
-                    className={navButtonClass(item.key)}
-                  >
-                    <Icon size={18} />
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
+  const Icon = item.icon;
+  return (
+    <button
+      key={item.key}
+      type="button"
+      onClick={() => onTabChange(item.key)}
+      className={navButtonClass(item.key)}
+    >
+      <Icon size={18} />
+      <span>{item.label}</span>
+
+      {item.key === "purchase_history" && purchaseHistoryCount > 0 && (
+        <span className="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+          {purchaseHistoryCount}
+        </span>
+      )}
+    </button>
+  );
+})}
             </div>
 
             <button
@@ -174,20 +182,30 @@ export default function AdminNavbar({
         <div className="flex flex-1 overflow-y-auto py-6">
             <div className={`w-full space-y-4 ${desktopSidebarOpen ? "px-0" : "mx-auto max-w-[72px]"}`}>
             {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => onTabChange(item.key)}
-                  className={navButtonClass(item.key, !desktopSidebarOpen)}
-                  title={!desktopSidebarOpen ? item.label : undefined}
-                >
-                  <Icon size={22} />
-                  {desktopSidebarOpen && <span>{item.label}</span>}
-                </button>
-              );
-            })}
+  const Icon = item.icon;
+  return (
+    <button
+      key={item.key}
+      type="button"
+      onClick={() => onTabChange(item.key)}
+      className={navButtonClass(item.key, !desktopSidebarOpen)}
+      title={!desktopSidebarOpen ? item.label : undefined}
+    >
+      <Icon size={22} />
+      {desktopSidebarOpen && <span>{item.label}</span>}
+
+      {item.key === "purchase_history" && purchaseHistoryCount > 0 && (
+        <span
+          className={`rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white ${
+            desktopSidebarOpen ? "ml-auto" : "absolute -right-1 -top-1"
+          }`}
+        >
+          {purchaseHistoryCount}
+        </span>
+      )}
+    </button>
+  );
+})}
           </div>
         </div>
 

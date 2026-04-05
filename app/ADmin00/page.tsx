@@ -564,6 +564,8 @@ function formatReadableDate(date: Date) {
   });
 }
 
+
+
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>("vehicles");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -591,6 +593,8 @@ const [bookingSearch, setBookingSearch] = useState("");
   const [purchaseHistoryFilter, setPurchaseHistoryFilter] = useState<
   "all" | "rent" | "buy"
       >("all");
+const [newPurchaseCount, setNewPurchaseCount] = useState(0);
+const [lastViewedPurchaseAt, setLastViewedPurchaseAt] = useState<string>("");
   const [mounted, setMounted] = useState(false);
 
   const [settings, setSettings] = useState<AppSetting>({
@@ -622,6 +626,11 @@ const [bookingSearch, setBookingSearch] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  
+  const [toast, setToast] = useState<{
+  text: string;
+  type: "success" | "error";
+} | null>(null);
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement | null>(null);
@@ -656,6 +665,34 @@ const [bookingSearch, setBookingSearch] = useState("");
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  /* ✅ ADD IT EXACTLY HERE */
+useEffect(() => {
+  const channel = supabase
+    .channel("admin-bookings-realtime")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "bookings" },
+      () => {
+        void loadPurchaseHistory();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    void supabase.removeChannel(channel);
+  };
+}, [lastViewedPurchaseAt]);
+
+useEffect(() => {
+  if (!toast) return;
+
+  const timer = setTimeout(() => {
+    setToast(null);
+  }, 3000);
+
+  return () => clearTimeout(timer);
+}, [toast]);
+
 async function loadAllData() {
   await Promise.all([
     loadVehicles(),
@@ -665,6 +702,17 @@ async function loadAllData() {
     loadPurchaseHistory(),
     loadSettings(),
   ]);
+}
+
+function markPurchaseHistoryAsViewed(items: PurchaseHistoryItem[]) {
+  if (items.length === 0) {
+    setNewPurchaseCount(0);
+    return;
+  }
+
+  const latestDate = items[0]?.created_at || "";
+  setLastViewedPurchaseAt(latestDate);
+  setNewPurchaseCount(0);
 }
 
   const filteredVehicles = useMemo(() => {
@@ -869,6 +917,18 @@ const attendanceAnalytics = useMemo(() => {
   });
 }, [purchaseHistory, purchaseHistoryFilter, bookingSearch]);
 
+const groupedPurchaseHistory = useMemo(() => {
+  const groups: Record<string, PurchaseHistoryItem[]> = {};
+
+  filteredPurchaseHistory.forEach((item) => {
+    const key = item.created_at ? item.created_at.slice(0, 10) : "unknown";
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
+  });
+
+  return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
+}, [filteredPurchaseHistory]);
+
   async function loadVehicles() {
     try {
       const { data, error } = await supabase
@@ -972,8 +1032,22 @@ async function loadPurchaseHistory() {
 
     if (error) throw error;
 
-    setPurchaseHistory((data ?? []) as unknown as PurchaseHistoryItem[]);
+    const items = (data ?? []) as unknown as PurchaseHistoryItem[];
+    setPurchaseHistory(items);
     setPurchaseHistoryLoadFailed(false);
+
+    if (!lastViewedPurchaseAt) {
+      setNewPurchaseCount(items.length);
+      return;
+    }
+
+    const unseenCount = items.filter(
+      (item) =>
+        item.created_at &&
+        new Date(item.created_at).getTime() > new Date(lastViewedPurchaseAt).getTime()
+    ).length;
+
+    setNewPurchaseCount(unseenCount);
   } catch (error) {
     console.error("Load purchase history error:", error);
     setPurchaseHistoryLoadFailed(true);
@@ -2540,11 +2614,16 @@ function paymentStatusBadgeClass(status?: string | null) {
   return "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
 }
 
-async function handleMarkPaymentPaid(bookingId: string) {
+async function handleTogglePaymentPaid(
+  bookingId: string,
+  currentStatus?: "pending" | "paid" | "failed" | null
+) {
   setLoading(true);
   setMessage("");
 
   try {
+    const nextStatus = currentStatus === "paid" ? "pending" : "paid";
+
     const response = await fetch("/api/bookings/update-payment-method", {
       method: "POST",
       headers: {
@@ -2552,25 +2631,49 @@ async function handleMarkPaymentPaid(bookingId: string) {
       },
       body: JSON.stringify({
         bookingId,
-        payment_status: "paid",
+        payment_status: nextStatus,
       }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      setMessage(data.error || "Failed to update payment status.");
+      setToast({
+        text: data.error || "Failed to update payment status.",
+        type: "error",
+      });
       return;
     }
 
     await loadPurchaseHistory();
-    setMessage("Payment marked as paid successfully.");
+
+    setToast({
+      text:
+        nextStatus === "paid"
+          ? "Payment marked as paid successfully."
+          : "Payment unmarked successfully.",
+      type: "success",
+    });
   } catch (error) {
-    console.error("Mark payment paid error:", error);
-    setMessage("Something went wrong while updating payment.");
+    console.error("Toggle payment paid error:", error);
+    setToast({
+      text: "Something went wrong while updating payment.",
+      type: "error",
+    });
   } finally {
     setLoading(false);
   }
+}
+
+function formatPurchaseGroupDate(dateString?: string) {
+  if (!dateString) return "Unknown Date";
+
+  return new Date(dateString).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function renderPurchaseHistoryTab() {
@@ -2645,221 +2748,254 @@ function renderPurchaseHistoryTab() {
           <div className="rounded-3xl border border-dashed border-gray-300 p-10 text-center text-gray-500 dark:border-[#30363d] dark:text-gray-400">
             No records found for this filter.
           </div>
-        ) : (
-          <div className="grid gap-5">
-            {filteredPurchaseHistory.map((item) => {
-              const vehicleInfo = Array.isArray(item.vehicles)
-                ? item.vehicles[0]
-                : item.vehicles;
+       ) : (
+  <div className="space-y-8">
+    {groupedPurchaseHistory.map(([dateKey, items]) => (
+      <div key={dateKey} className="space-y-4">
+        <div className="flex items-center gap-4">
+          <div className="h-px flex-1 bg-gray-300 dark:bg-[#30363d]" />
+          <p className="text-sm font-semibold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">
+            {formatPurchaseGroupDate(items[0]?.created_at)}
+          </p>
+          <div className="h-px flex-1 bg-gray-300 dark:bg-[#30363d]" />
+        </div>
 
-              return (
-                <div
-                  key={item.id}
-                  className="rounded-3xl border border-gray-200 bg-gray-50 p-5 dark:border-[#30363d] dark:bg-[#21262d]"
-                >
-                  <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                      {vehicleInfo?.image_url ? (
-                        <img
-                          src={vehicleInfo.image_url}
-                          alt={vehicleInfo.title}
-                          className="h-28 w-full rounded-2xl object-cover sm:w-40"
-                        />
-                      ) : (
-                        <div className="flex h-28 w-full items-center justify-center rounded-2xl bg-gray-200 text-sm text-gray-500 dark:bg-[#30363d] dark:text-gray-400 sm:w-40">
-                          No image
+        <div className="space-y-4">
+          {items.map((item) => {
+            const vehicleInfo = Array.isArray(item.vehicles)
+              ? item.vehicles[0]
+              : item.vehicles;
+
+            return (
+              <div
+                key={item.id}
+                className="rounded-3xl border border-gray-200 bg-gray-50 p-5 dark:border-[#30363d] dark:bg-[#21262d]"
+              >
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                    {vehicleInfo?.image_url ? (
+                      <img
+                        src={vehicleInfo.image_url}
+                        alt={vehicleInfo.title}
+                        className="h-28 w-full rounded-2xl object-cover sm:w-40"
+                      />
+                    ) : (
+                      <div className="flex h-28 w-full items-center justify-center rounded-2xl bg-gray-200 text-sm text-gray-500 dark:bg-[#30363d] dark:text-gray-400 sm:w-40">
+                        No image
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                            {item.full_name}
+                          </h3>
+
+
+                          {item.created_at &&
+                            lastViewedPurchaseAt &&
+                            new Date(item.created_at).getTime() >
+                              new Date(lastViewedPurchaseAt).getTime() && (
+                              <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white animate-pulse">
+                                NEW
+                              </span>
+                            )}
+
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ${purchaseStatusBadgeClass(
+                              item.status
+                            )}`}
+                          >
+                            {item.status}
+                          </span>
+
+                          <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold capitalize text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                            {item.booking_type === "rent" ? "Rental" : "Purchase"}
+                          </span>
+
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentMethodBadgeClass(
+                              item.payment_method
+                            )}`}
+                          >
+                            {item.payment_method === "card"
+                              ? "Card"
+                              : item.payment_method === "momo"
+                              ? "MoMo"
+                              : item.payment_method === "cash"
+                              ? "Cash"
+                              : "No Payment Method"}
+                          </span>
                         </div>
-                      )}
 
-                      <div className="space-y-3">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                              {item.full_name}
-                            </h3>
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                          {item.email}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          {item.phone}
+                        </p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 break-all">
+                          Booking ID: {item.id}
+                        </p>
+                      </div>
 
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+                          <p className="text-xs text-gray-400">Vehicle</p>
+                          <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                            {vehicleInfo
+                              ? `${vehicleInfo.title} (${vehicleInfo.brand} ${vehicleInfo.model} ${vehicleInfo.year})`
+                              : "Unknown vehicle"}
+                          </p>
+                        </div>
+
+                        <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+                          <p className="text-xs text-gray-400">Pickup Location</p>
+                          <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                            {item.pickup_location || "-"}
+                          </p>
+                        </div>
+
+                        <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+                          <p className="text-xs text-gray-400">Payment Method</p>
+                          <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                            {item.payment_method
+                              ? item.payment_method === "card"
+                                ? "Visa / Card"
+                                : item.payment_method === "momo"
+                                ? "MoMo"
+                                : "Cash"
+                              : "Not selected"}
+                          </p>
+                        </div>
+
+                        <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
+                          <p className="text-xs text-gray-400">Payment Status</p>
+                          <div className="mt-2">
                             <span
-                              className={`rounded-full px-3 py-1 text-xs font-semibold ${purchaseStatusBadgeClass(
-                                item.status
+                              className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentStatusBadgeClass(
+                                item.payment_status
                               )}`}
                             >
-                              {item.status}
+                              {item.payment_status || "unknown"}
                             </span>
-
-                            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold capitalize text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                              {item.booking_type === "rent" ? "Rental" : "Purchase"}
-                            </span>
-
-                            <span
-                                  className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentMethodBadgeClass(
-                                    item.payment_method
-                                  )}`}
-                                >
-                                  {item.payment_method === "card"
-                                    ? "Card"
-                                    : item.payment_method === "momo"
-                                    ? "MoMo"
-                                    : item.payment_method === "cash"
-                                    ? "Cash"
-                                    : "No Payment Method"}
-                                </span>
                           </div>
-
-                          <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                            {item.email}
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">
-                            {item.phone}
-                          </p>
-                          <p className="text-xs text-gray-400 dark:text-gray-500 break-all">
-                            Booking ID: {item.id}
-                          </p>
                         </div>
 
-                        <div className="grid gap-3 sm:grid-cols-2">
+                        {item.booking_type === "rent" && (
                           <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
-                            <p className="text-xs text-gray-400">Vehicle</p>
+                            <p className="text-xs text-gray-400">Rental Period</p>
                             <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
-                              {vehicleInfo
-                                ? `${vehicleInfo.title} (${vehicleInfo.brand} ${vehicleInfo.model} ${vehicleInfo.year})`
-                                : "Unknown vehicle"}
+                              {item.start_date || "-"} to {item.end_date || "-"}
                             </p>
                           </div>
+                        )}
 
+                        {item.booking_type === "rent" && (
                           <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
-                            <p className="text-xs text-gray-400">Pickup Location</p>
+                            <p className="text-xs text-gray-400">Chauffeur Required</p>
                             <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
-                              {item.pickup_location || "-"}
+                              {item.chauffeur_required ? "Yes" : "No"}
                             </p>
                           </div>
+                        )}
 
-                          <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
-  <p className="text-xs text-gray-400">Payment Method</p>
-  <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
-    {item.payment_method
-      ? item.payment_method === "card"
-        ? "Visa / Card"
-        : item.payment_method === "momo"
-        ? "MoMo"
-        : "Cash"
-      : "Not selected"}
-  </p>
-</div>
-
-<div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
-  <p className="text-xs text-gray-400">Payment Status</p>
-  <div className="mt-2">
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentStatusBadgeClass(
-        item.payment_status
-      )}`}
-    >
-      {item.payment_status || "unknown"}
-    </span>
-  </div>
-</div>
-
-                          {item.booking_type === "rent" && (
+                        {item.booking_type === "rent" && item.chauffeur_required && (
+                          <>
                             <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
-                              <p className="text-xs text-gray-400">Rental Period</p>
+                              <p className="text-xs text-gray-400">Chauffeur Name</p>
                               <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
-                                {item.start_date || "-"} to {item.end_date || "-"}
+                                {item.chauffeur_name || "-"}
                               </p>
                             </div>
-                          )}
 
-                          {item.booking_type === "rent" && (
                             <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
-                              <p className="text-xs text-gray-400">Chauffeur Required</p>
+                              <p className="text-xs text-gray-400">Chauffeur Phone</p>
                               <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
-                                {item.chauffeur_required ? "Yes" : "No"}
+                                {item.chauffeur_phone || "-"}
                               </p>
                             </div>
-                          )}
 
-                          {item.booking_type === "rent" && item.chauffeur_required && (
-                            <>
-                              <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
-                                <p className="text-xs text-gray-400">Chauffeur Name</p>
-                                <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
-                                  {item.chauffeur_name || "-"}
-                                </p>
-                              </div>
-
-                              <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117]">
-                                <p className="text-xs text-gray-400">Chauffeur Phone</p>
-                                <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
-                                  {item.chauffeur_phone || "-"}
-                                </p>
-                              </div>
-
-                              <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117] sm:col-span-2">
-                                <p className="text-xs text-gray-400">Pickup Time</p>
-                                <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
-                                  {item.pickup_time || "-"}
-                                </p>
-                              </div>
-                            </>
-                          )}
-                        </div>
+                            <div className="rounded-2xl bg-white p-3 dark:bg-[#0d1117] sm:col-span-2">
+                              <p className="text-xs text-gray-400">Pickup Time</p>
+                              <p className="mt-1 font-medium text-gray-900 dark:text-gray-100">
+                                {item.pickup_time || "-"}
+                              </p>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
+                  </div>
 
-                   <div className="min-w-[220px] rounded-2xl bg-white px-4 py-4 text-right shadow-sm dark:bg-[#0d1117]">
-  <p className="text-xs text-gray-400">Total Amount</p>
-  <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
-    ${Number(item.total_amount || 0).toLocaleString()}
-  </p>
+                  <div className="min-w-[220px] rounded-2xl bg-white px-4 py-4 text-right shadow-sm dark:bg-[#0d1117]">
+                    <p className="text-xs text-gray-400">Total Amount</p>
+                    <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      ${Number(item.total_amount || 0).toLocaleString()}
+                    </p>
 
-  <p className="mt-3 text-xs text-gray-400">Payment Method</p>
-  <div className="mt-2">
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentMethodBadgeClass(
-        item.payment_method
-      )}`}
-    >
-      {item.payment_method === "card"
-        ? "Card"
-        : item.payment_method === "momo"
-        ? "MoMo"
-        : item.payment_method === "cash"
-        ? "Cash"
-        : "No Payment Method"}
-    </span>
-  </div>
+                    <p className="mt-3 text-xs text-gray-400">Payment Method</p>
+                    <div className="mt-2">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentMethodBadgeClass(
+                          item.payment_method
+                        )}`}
+                      >
+                        {item.payment_method === "card"
+                          ? "Card"
+                          : item.payment_method === "momo"
+                          ? "MoMo"
+                          : item.payment_method === "cash"
+                          ? "Cash"
+                          : "No Payment Method"}
+                      </span>
+                    </div>
 
-  <p className="mt-3 text-xs text-gray-400">Payment Status</p>
-  <div className="mt-2">
-    <span
-      className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentStatusBadgeClass(
-        item.payment_status
-      )}`}
-    >
-      {item.payment_status || "unknown"}
-    </span>
-  </div>
+                    <p className="mt-3 text-xs text-gray-400">Payment Status</p>
+                    <div className="mt-2">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${paymentStatusBadgeClass(
+                          item.payment_status
+                        )}`}
+                      >
+                        {item.payment_status || "unknown"}
+                      </span>
+                    </div>
 
-  {item.payment_status !== "paid" && (
-    <button
-      type="button"
-      onClick={() => void handleMarkPaymentPaid(item.id)}
-      disabled={loading}
-      className="mt-4 w-full rounded-2xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60"
-    >
-      Mark as Paid
-    </button>
-  )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void handleTogglePaymentPaid(item.id, item.payment_status)
+                      }
+                      disabled={loading}
+                      className={`mt-4 w-full rounded-2xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-60 ${
+                        item.payment_status === "paid"
+                          ? "bg-red-600 hover:bg-red-700"
+                          : "bg-green-600 hover:bg-green-700"
+                      }`}
+                    >
+                      {item.payment_status === "paid"
+                        ? "Unmark as Paid"
+                        : "Mark as Paid"}
+                    </button>
 
-  <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-    {item.created_at ? new Date(item.created_at).toLocaleString() : ""}
-  </p>
-</div>
+                    <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                      {item.created_at
+                        ? new Date(item.created_at).toLocaleString()
+                        : ""}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+          
       </section>
     </div>
   );
@@ -2968,28 +3104,33 @@ function renderPurchaseHistoryTab() {
   return (
     <main className="min-h-screen bg-gray-100 text-gray-900 dark:bg-[#0d1117] dark:text-gray-200">
       <div className="min-h-screen">
-        <AdminNavbar
-          activeTab={activeTab}
-          onTabChange={(tab) => {
-            setActiveTab(tab);
-            setMobileMenuOpen(false);
-          }}
-          mobileMenuOpen={mobileMenuOpen}
-          onMobileMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
-          desktopSidebarOpen={desktopSidebarOpen}
-          onDesktopSidebarToggle={() => setDesktopSidebarOpen((prev) => !prev)}
-          onLogout={handleLogout}
-          labels={{
-              vehicles: t.vehicles,
-              gps: t.gps,
-              employees: t.employees,
-              attendance: t.attendance,
-              members: t.members,
-              purchaseHistory: t.purchase_history,
-              settings: t.settings,
-              logout: t.logout,
-            }}
-        />
+     <AdminNavbar
+  activeTab={activeTab}
+  onTabChange={(tab) => {
+    setActiveTab(tab);
+    setMobileMenuOpen(false);
+
+    if (tab === "purchase_history") {
+      markPurchaseHistoryAsViewed(purchaseHistory);
+    }
+  }}
+  mobileMenuOpen={mobileMenuOpen}
+  onMobileMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
+  desktopSidebarOpen={desktopSidebarOpen}
+  onDesktopSidebarToggle={() => setDesktopSidebarOpen((prev) => !prev)}
+  onLogout={handleLogout}
+  purchaseHistoryCount={newPurchaseCount}
+  labels={{
+    vehicles: t.vehicles,
+    gps: t.gps,
+    employees: t.employees,
+    attendance: t.attendance,
+    members: t.members,
+    purchaseHistory: t.purchase_history,
+    settings: t.settings,
+    logout: t.logout,
+  }}
+/>
 
         <section
           className={`px-4 py-8 md:px-8 ${
@@ -3004,6 +3145,17 @@ function renderPurchaseHistoryTab() {
                 {message}
               </div>
             )}
+            {toast && (
+  <div className="fixed right-6 top-6 z-[100]">
+    <div
+      className={`rounded-2xl px-5 py-4 text-sm font-medium text-white shadow-xl ${
+        toast.type === "success" ? "bg-green-600" : "bg-red-600"
+      }`}
+    >
+      {toast.text}
+    </div>
+  </div>
+)}
 
             {renderActiveTab()}
           </div>
