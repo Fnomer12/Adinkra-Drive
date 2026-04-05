@@ -71,7 +71,9 @@ function AdminVerifyContent() {
           </button>
         </form>
 
-        {message && <p className="mt-4 text-sm text-red-600">{message}</p>}
+        {message && (
+          <p className="mt-4 text-sm text-red-600">{message}</p>
+        )}
       </div>
     </main>
   );
