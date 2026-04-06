@@ -391,6 +391,8 @@ async function handleGoogleSignIn() {
 
   const redirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`;
 
+  console.log("window.location.origin:", window.location.origin);
+  console.log("NEXT_PUBLIC_SITE_URL:", process.env.NEXT_PUBLIC_SITE_URL);
   console.log("OAuth redirectTo:", redirectTo);
 
   const { error } = await supabase.auth.signInWithOAuth({
