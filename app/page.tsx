@@ -1,19 +1,37 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export default function HomePage() {
+  const [videoReady, setVideoReady] = useState(false);
+
   return (
     <main className="min-h-screen bg-black text-white">
       <Navbar />
 
-      <section className="relative min-h-[92vh] overflow-hidden">
+      <section className="relative min-h-[92vh] overflow-hidden bg-black">
+        {!videoReady && (
+          <img
+            src="/advert-poster.jpg"
+            alt="Adinkra Drive hero"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
+
         <video
           autoPlay
           muted
           loop
           playsInline
-          className="absolute inset-0 h-full w-full object-cover"
+          preload="auto"
+          poster="/advert-poster.jpg"
+          onCanPlay={() => setVideoReady(true)}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
+            videoReady ? "opacity-100" : "opacity-0"
+          }`}
         >
           <source src="/advert.mp4" type="video/mp4" />
           Your browser does not support the video tag.
