@@ -384,13 +384,15 @@ const [historyLoading, setHistoryLoading] = useState(false);
   }, [pickupLocation]);
 
   async function handleGoogleSignIn() {
-  const origin = window.location.origin;
   const next = window.location.pathname + window.location.search;
+
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
 
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`,
     },
   });
 
