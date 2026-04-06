@@ -13,7 +13,7 @@ const teamMembers = [
   {
     name: "Kwadwo Opoku Agyeman",
     role: "Operations Manager",
-    image: "/team/Kojo.jpg",
+    image: "/team/Kojo.jpeg",
   },
   {
     name: "Joseph Amedi",
