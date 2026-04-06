@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic"; // ✅ ADD THIS
+
 import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -23,10 +25,7 @@ function VerifyPageContent() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          username,
-          code,
-        }),
+        body: JSON.stringify({ username, code }),
       });
 
       const data = await response.json();
@@ -49,9 +48,6 @@ function VerifyPageContent() {
     <main className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
       <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-sm">
         <h1 className="text-4xl font-bold text-gray-900">Verify Login</h1>
-        <p className="mt-3 text-gray-500">
-          Enter the verification code sent to the admin email.
-        </p>
 
         <form onSubmit={handleVerify} className="mt-8 space-y-4">
           <input
@@ -59,19 +55,19 @@ function VerifyPageContent() {
             placeholder="Verification code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="w-full rounded-2xl border border-gray-300 px-4 py-4 outline-none focus:border-black"
+            className="w-full rounded-2xl border px-4 py-4"
           />
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-black py-4 font-semibold text-white disabled:opacity-60"
+            className="w-full rounded-2xl bg-black py-4 text-white"
           >
             {loading ? "Verifying..." : "Verify"}
           </button>
         </form>
 
-        {message && <p className="mt-4 text-sm text-red-600">{message}</p>}
+        {message && <p className="mt-4 text-red-600">{message}</p>}
       </div>
     </main>
   );
@@ -79,7 +75,7 @@ function VerifyPageContent() {
 
 export default function AdminVerifyPage() {
   return (
-    <Suspense fallback={<div className="p-6 text-center">Loading...</div>}>
+    <Suspense fallback={<div>Loading...</div>}>
       <VerifyPageContent />
     </Suspense>
   );
