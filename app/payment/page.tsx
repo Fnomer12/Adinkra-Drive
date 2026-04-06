@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+export const dynamic = "force-dynamic";
+
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 declare global {
@@ -21,7 +23,7 @@ declare global {
   }
 }
 
-export default function PaymentPage() {
+function PaymentPageContent() {
   const params = useSearchParams();
 
   const bookingId = params.get("bookingId") || "";
@@ -36,37 +38,37 @@ export default function PaymentPage() {
   const [verified, setVerified] = useState(false);
   const [message, setMessage] = useState("");
 
-useEffect(() => {
-  if (paymentMethod !== "card") {
-    setScriptLoaded(false);
-    return;
-  }
+  useEffect(() => {
+    if (paymentMethod !== "card") {
+      setScriptLoaded(false);
+      return;
+    }
 
-  const existingScript = document.querySelector(
-    'script[src="https://js.paystack.co/v1/inline.js"]'
-  ) as HTMLScriptElement | null;
+    const existingScript = document.querySelector(
+      'script[src="https://js.paystack.co/v1/inline.js"]'
+    ) as HTMLScriptElement | null;
 
-  if (existingScript) {
-    setScriptLoaded(true);
-    return;
-  }
+    if (existingScript) {
+      setScriptLoaded(true);
+      return;
+    }
 
-  const script = document.createElement("script");
-  script.src = "https://js.paystack.co/v1/inline.js";
-  script.async = true;
-  script.onload = () => setScriptLoaded(true);
-  script.onerror = () => {
-    setMessage("Failed to load payment gateway.");
-    setScriptLoaded(false);
-  };
+    const script = document.createElement("script");
+    script.src = "https://js.paystack.co/v1/inline.js";
+    script.async = true;
+    script.onload = () => setScriptLoaded(true);
+    script.onerror = () => {
+      setMessage("Failed to load payment gateway.");
+      setScriptLoaded(false);
+    };
 
-  document.body.appendChild(script);
+    document.body.appendChild(script);
 
-  return () => {
-    script.onload = null;
-    script.onerror = null;
-  };
-}, [paymentMethod]);
+    return () => {
+      script.onload = null;
+      script.onerror = null;
+    };
+  }, [paymentMethod]);
 
   async function handleCashConfirmation() {
     if (!bookingId) {
@@ -243,9 +245,7 @@ useEffect(() => {
         {message && (
           <div
             className={`mt-5 rounded-2xl px-4 py-3 text-sm ${
-              verified
-                ? "bg-green-50 text-green-700"
-                : "bg-red-50 text-red-600"
+              verified ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"
             }`}
           >
             {message}
@@ -312,5 +312,13 @@ useEffect(() => {
         )}
       </div>
     </main>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center">Loading payment...</div>}>
+      <PaymentPageContent />
+    </Suspense>
   );
 }
