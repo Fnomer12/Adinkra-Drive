@@ -38,6 +38,7 @@ export default function Navbar() {
   const linkRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
 
   const isHome = pathname === "/";
+  const links = useMemo(() => navLinks, []);
 
   useEffect(() => {
     setActiveHref(pathname);
@@ -48,8 +49,9 @@ export default function Navbar() {
       setIsShrunk(window.scrollY > 40);
     };
 
-    handleScroll();
     window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -75,50 +77,41 @@ export default function Navbar() {
       if (match) setActiveHref(match.href);
     };
 
-    detect();
     window.addEventListener("scroll", detect);
+    detect();
+
     return () => window.removeEventListener("scroll", detect);
   }, [isHome]);
 
-  const links = useMemo(() => navLinks, []);
-
   useEffect(() => {
-    let raf = 0;
+    const updateUnderline = () => {
+      const el = linkRefs.current[activeHref];
+      const nav = navRef.current;
 
-    const update = () => {
-      cancelAnimationFrame(raf);
+      if (!el || !nav) {
+        setUnderline((prev) => ({ ...prev, opacity: 0 }));
+        return;
+      }
 
-      raf = requestAnimationFrame(() => {
-        const el = linkRefs.current[activeHref];
-        const nav = navRef.current;
+      const navRect = nav.getBoundingClientRect();
+      const rect = el.getBoundingClientRect();
 
-        if (!el || !nav) {
-          setUnderline((prev) => ({ ...prev, opacity: 0 }));
-          return;
-        }
-
-        const navRect = nav.getBoundingClientRect();
-        const rect = el.getBoundingClientRect();
-
-        setUnderline({
-          left: rect.left - navRect.left + rect.width * 0.05,
-          width: rect.width * 0.9,
-          opacity: 1,
-        });
+      setUnderline({
+        left: rect.left - navRect.left + rect.width * 0.05,
+        width: rect.width * 0.9,
+        opacity: 1,
       });
     };
 
-    update();
+    const raf = requestAnimationFrame(updateUnderline);
 
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update);
+    window.addEventListener("resize", updateUnderline);
 
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", updateUnderline);
     };
-  }, [activeHref, pathname, isShrunk]);
+  }, [activeHref, isShrunk]);
 
   return (
     <header
@@ -145,22 +138,21 @@ export default function Navbar() {
 
               return (
                 <Link
-                  key={link.href}
-                  href={link.href}
-                  ref={(el) => {
-                    linkRefs.current[link.href] = el;
-                  }}
-                  className={`${font.className} relative pb-2 italic tracking-wide transition-all duration-500 ease-out ${
-                    isShrunk
-                      ? "text-[1.1rem] sm:text-[1.55rem]"
-                      : "text-[1.25rem] sm:text-[1.85rem]"
-                  }`}
-                >
+                      key={link.href}
+                      href={link.href}
+                      prefetch={true}
+                      ref={(el) => {
+                        linkRefs.current[link.href] = el;
+                      }}
+                      className={`${font.className} relative pb-2 italic tracking-wide transition-all duration-500 ease-out ${
+                        isShrunk
+                          ? "text-[1.1rem] sm:text-[1.55rem]"
+                          : "text-[1.25rem] sm:text-[1.85rem]"
+                      }`}
+                    >
                   <span
                     className={`transition duration-300 ${
-                      isActive
-                        ? "text-white"
-                        : "text-gray-400 hover:text-white"
+                      isActive ? "text-white" : "text-gray-400 hover:text-white"
                     }`}
                   >
                     {link.label}
@@ -170,7 +162,7 @@ export default function Navbar() {
             })}
 
             <span
-              className="pointer-events-none absolute bottom-0 h-[2.5px] rounded-full bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.6)] transition-all duration-500 ease-out"
+              className="pointer-events-none absolute bottom-0 h-[2.5px] rounded-full bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.6)] transition-all duration-300 ease-out"
               style={{
                 left: `${underline.left}px`,
                 width: `${underline.width}px`,
