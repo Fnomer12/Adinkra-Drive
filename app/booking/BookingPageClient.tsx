@@ -383,16 +383,20 @@ const [historyLoading, setHistoryLoading] = useState(false);
     return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=13&output=embed`;
   }, [pickupLocation]);
 
-  async function handleGoogleSignIn() {
+async function handleGoogleSignIn() {
   const next = window.location.pathname + window.location.search;
 
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
 
+  const redirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`;
+
+  console.log("OAuth redirectTo:", redirectTo);
+
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent(next)}`,
+      redirectTo,
     },
   });
 
