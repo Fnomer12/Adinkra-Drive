@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-function AdminVerifyContent() {
+function VerifyPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -71,9 +71,7 @@ function AdminVerifyContent() {
           </button>
         </form>
 
-        {message && (
-          <p className="mt-4 text-sm text-red-600">{message}</p>
-        )}
+        {message && <p className="mt-4 text-sm text-red-600">{message}</p>}
       </div>
     </main>
   );
@@ -81,16 +79,8 @@ function AdminVerifyContent() {
 
 export default function AdminVerifyPage() {
   return (
-    <Suspense
-      fallback={
-        <main className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-sm text-center">
-            <p className="text-gray-500">Loading verification page...</p>
-          </div>
-        </main>
-      }
-    >
-      <AdminVerifyContent />
+    <Suspense fallback={<div className="p-6 text-center">Loading...</div>}>
+      <VerifyPageContent />
     </Suspense>
   );
 }
