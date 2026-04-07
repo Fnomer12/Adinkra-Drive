@@ -5,6 +5,7 @@ import { Bell, X, Search } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
+import AdminAIAssistant from "@/components/AdminAIAssistant";
 import AdminNavbar, { type AdminTab } from "@/components/AdminNavbar";
 
 
@@ -3107,36 +3108,37 @@ function renderPurchaseHistoryTab() {
   }
 }
 
-  return (
+return (
+  <>
     <main className="min-h-screen bg-gray-100 text-gray-900 dark:bg-[#0d1117] dark:text-gray-200">
       <div className="min-h-screen">
-     <AdminNavbar
-  activeTab={activeTab}
-  onTabChange={(tab) => {
-    setActiveTab(tab);
-    setMobileMenuOpen(false);
+        <AdminNavbar
+          activeTab={activeTab}
+          onTabChange={(tab) => {
+            setActiveTab(tab);
+            setMobileMenuOpen(false);
 
-    if (tab === "purchase_history") {
-      markPurchaseHistoryAsViewed(purchaseHistory);
-    }
-  }}
-  mobileMenuOpen={mobileMenuOpen}
-  onMobileMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
-  desktopSidebarOpen={desktopSidebarOpen}
-  onDesktopSidebarToggle={() => setDesktopSidebarOpen((prev) => !prev)}
-  onLogout={handleLogout}
-  purchaseHistoryCount={newPurchaseCount}
-  labels={{
-    vehicles: t.vehicles,
-    gps: t.gps,
-    employees: t.employees,
-    attendance: t.attendance,
-    members: t.members,
-    purchaseHistory: t.purchase_history,
-    settings: t.settings,
-    logout: t.logout,
-  }}
-/>
+            if (tab === "purchase_history") {
+              markPurchaseHistoryAsViewed(purchaseHistory);
+            }
+          }}
+          mobileMenuOpen={mobileMenuOpen}
+          onMobileMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
+          desktopSidebarOpen={desktopSidebarOpen}
+          onDesktopSidebarToggle={() => setDesktopSidebarOpen((prev) => !prev)}
+          onLogout={handleLogout}
+          purchaseHistoryCount={newPurchaseCount}
+          labels={{
+            vehicles: t.vehicles,
+            gps: t.gps,
+            employees: t.employees,
+            attendance: t.attendance,
+            members: t.members,
+            purchaseHistory: t.purchase_history,
+            settings: t.settings,
+            logout: t.logout,
+          }}
+        />
 
         <section
           className={`px-4 py-8 md:px-8 ${
@@ -3151,22 +3153,26 @@ function renderPurchaseHistoryTab() {
                 {message}
               </div>
             )}
+
             {toast && (
-  <div className="fixed right-6 top-6 z-[100]">
-    <div
-      className={`rounded-2xl px-5 py-4 text-sm font-medium text-white shadow-xl ${
-        toast.type === "success" ? "bg-green-600" : "bg-red-600"
-      }`}
-    >
-      {toast.text}
-    </div>
-  </div>
-)}
+              <div className="fixed right-6 top-6 z-[100]">
+                <div
+                  className={`rounded-2xl px-5 py-4 text-sm font-medium text-white shadow-xl ${
+                    toast.type === "success" ? "bg-green-600" : "bg-red-600"
+                  }`}
+                >
+                  {toast.text}
+                </div>
+              </div>
+            )}
 
             {renderActiveTab()}
           </div>
         </section>
       </div>
-     </main>
-  );
+    </main>
+
+    <AdminAIAssistant />
+  </>
+);
 }

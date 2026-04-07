@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import GlobalAIAssistant from "@/components/GlobalAIAssistant";
+import ConditionalAIAssistant from "@/components/ConditionalAIAssistant";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Adinkra Drive",
-  description: "Premium car rental and sales platform",
+  description: "Premium car rental and purchase platform",
 };
 
 export default function RootLayout({
@@ -30,9 +30,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
-
-        {/* ✅ GLOBAL AI ASSISTANT (VERY IMPORTANT) */}
-        <GlobalAIAssistant />
+        <ConditionalAIAssistant />
       </body>
     </html>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bot, Send, X } from "lucide-react";
+import { Bot, Send, X, Sparkles } from "lucide-react";
 
 type ChatMessage = {
   role: "assistant" | "user";
@@ -70,22 +70,32 @@ export default function GlobalAIAssistant() {
 
   return (
     <>
-   <button
-  type="button"
-  onClick={() => setOpen(true)}
-  className="fixed bottom-6 right-6 z-[100] flex h-16 w-16 items-center justify-center rounded-full 
-  bg-gradient-to-br from-[#1a1a1a] to-[#000000] 
-  text-white 
-  shadow-[0_0_25px_rgba(255,193,7,0.6)] 
-  hover:scale-110 hover:shadow-[0_0_40px_rgba(255,193,7,0.9)] 
-  transition-all duration-300"
-  aria-label="Open AI assistant"
->
-  <Bot
-    size={24}
-    className="text-[#FFC107] drop-shadow-[0_0_10px_rgba(255,193,7,0.9)]"
-  />
-</button>
+      {!open && (
+        <div className="group fixed bottom-6 right-6 z-[100]">
+          <div className="absolute inset-0 rounded-full bg-[#FFC107]/30 blur-2xl animate-pulse" />
+
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="ai-float relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#111111] via-[#000000] to-[#1a1a1a] border border-[#FFD54F]/30 shadow-[0_0_25px_rgba(255,193,7,0.45)] hover:scale-110 hover:shadow-[0_0_45px_rgba(255,193,7,0.75)] transition-all duration-300"
+            aria-label="Open AI assistant"
+          >
+            <span className="absolute inset-0 rounded-full ring-1 ring-[#FFC107]/20 animate-ping" />
+
+            <Bot
+              size={25}
+              className="relative z-10 text-[#FFC107] drop-shadow-[0_0_10px_rgba(255,193,7,0.9)]"
+            />
+
+            <Sparkles
+              size={12}
+              className="absolute right-3 top-3 text-[#FFE082] opacity-90"
+            />
+          </button>
+
+          
+        </div>
+      )}
 
       {open && (
         <div className="fixed bottom-6 right-6 z-[110] flex h-[580px] w-[380px] max-w-[calc(100vw-24px)] flex-col overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-2xl">
