@@ -1211,99 +1211,113 @@ async function deleteEmployeeStorageFile(path: string | null) {
 
 
   async function handleVehicleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setMessage("");
+  e.preventDefault();
+  setMessage("");
 
-    if (!validateVehicleForm()) return;
-    setLoading(true);
+  if (!validateVehicleForm()) return;
+  setLoading(true);
 
-    try {
-      let image_url: string | null = existingImageUrl || null;
-      let image_path: string | null = existingImagePath || null;
-      const oldImagePath = existingImagePath || null;
+  try {
+    let image_url: string | null = existingImageUrl || null;
+    let image_path: string | null = existingImagePath || null;
+    const oldImagePath = existingImagePath || null;
 
-      if (removeCurrentImage && oldImagePath) {
-        await deleteVehicleStorageFile(oldImagePath);
-        image_url = null;
-        image_path = null;
-      }
-
-      if (imageFile) {
-        const uploaded = await uploadVehicleImage(imageFile);
-        image_url = uploaded.image_url;
-        image_path = uploaded.image_path;
-
-        if (oldImagePath && oldImagePath !== uploaded.image_path) {
-          await deleteVehicleStorageFile(oldImagePath);
-        }
-      }
-
-      const payload = {
-        title: vehicleForm.title.trim(),
-        category: vehicleForm.category,
-        price: Number(vehicleForm.price),
-        image_url,
-        image_path,
-        brand: vehicleForm.brand.trim(),
-        model: vehicleForm.model.trim(),
-        year: Number(vehicleForm.year),
-        transmission: vehicleForm.transmission.trim(),
-        fuel_type: vehicleForm.fuel_type.trim(),
-        seats: Number(vehicleForm.seats),
-        description: vehicleForm.description.trim(),
-        status: vehicleForm.status,
-      };
-
-      if (vehicleEditingId) {
-        const { error } = await supabase
-          .from("vehicles")
-          .update(payload)
-          .eq("id", vehicleEditingId);
-
-        if (error) throw error;
-        setMessage(t.vehicleUpdated);
-      } else {
-        const { data, error } = await supabase
-          .from("vehicles")
-          .insert(payload)
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        try {
-          await fetch("/api/notify-members", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              vehicle: {
-                title: data.title,
-                brand: data.brand,
-                model: data.model,
-                year: data.year,
-                category: data.category,
-                price: data.price,
-                description: data.description,
-                image_url: data.image_url,
-              },
-            }),
-          });
-        } catch (notifyError) {
-          console.error("Notification error:", notifyError);
-        }
-
-        setMessage(t.vehicleAdded);
-      }
-
-      await loadVehicles();
-      resetVehicleForm();
-    } catch (error) {
-      console.error("Vehicle submit full error:", error);
-      setMessage(t.vehicleSaveError);
-    } finally {
-      setLoading(false);
+    if (removeCurrentImage && oldImagePath) {
+      await deleteVehicleStorageFile(oldImagePath);
+      image_url = null;
+      image_path = null;
     }
+
+    if (imageFile) {
+      const uploaded = await uploadVehicleImage(imageFile);
+      image_url = uploaded.image_url;
+      image_path = uploaded.image_path;
+
+      if (oldImagePath && oldImagePath !== uploaded.image_path) {
+        await deleteVehicleStorageFile(oldImagePath);
+      }
+    }
+
+    const payload = {
+      title: vehicleForm.title.trim(),
+      category: vehicleForm.category,
+      price: Number(vehicleForm.price),
+      image_url,
+      image_path,
+      brand: vehicleForm.brand.trim(),
+      model: vehicleForm.model.trim(),
+      year: Number(vehicleForm.year),
+      transmission: vehicleForm.transmission.trim(),
+      fuel_type: vehicleForm.fuel_type.trim(),
+      seats: Number(vehicleForm.seats),
+      description: vehicleForm.description.trim(),
+      status: vehicleForm.status,
+    };
+
+    if (vehicleEditingId) {
+      const { error } = await supabase
+        .from("vehicles")
+        .update(payload)
+        .eq("id", vehicleEditingId);
+
+      if (error) throw error;
+      setMessage(t.vehicleUpdated);
+    } else {
+      const { data, error } = await supabase
+        .from("vehicles")
+        .insert(payload)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      try {
+        const notifyResponse = await fetch("/api/notify-members", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            vehicle: {
+              title: data.title,
+              brand: data.brand,
+              model: data.model,
+              year: data.year,
+              category: data.category,
+              price: data.price,
+              description: data.description,
+              image_url: data.image_url,
+            },
+          }),
+        });
+
+        const notifyResult = await notifyResponse.json();
+
+        if (!notifyResponse.ok) {
+          console.error("Notify members API error:", notifyResult);
+          setMessage(
+            notifyResult?.error ||
+              "Vehicle added successfully, but update emails were not sent."
+          );
+        } else {
+          setMessage(
+            notifyResult?.message ||
+              "Vehicle added successfully and update emails sent."
+          );
+        }
+      } catch (notifyError) {
+        console.error("Notification fetch error:", notifyError);
+        setMessage("Vehicle added successfully, but update emails were not sent.");
+      }
+    }
+
+    await loadVehicles(); 
+    resetVehicleForm();
+  } catch (error) {
+    console.error("Vehicle submit full error:", error);
+    setMessage(t.vehicleSaveError);
+  } finally {
+    setLoading(false);
   }
+}
 
  async function handleEmployeeSubmit(e: React.FormEvent) {
   e.preventDefault();
