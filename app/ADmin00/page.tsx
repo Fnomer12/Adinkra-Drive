@@ -635,10 +635,16 @@ const [lastViewedPurchaseAt, setLastViewedPurchaseAt] = useState<string>("");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-    void loadAllData();
-  }, []);
+ useEffect(() => {
+  setMounted(true);
+
+  const savedLastViewed = localStorage.getItem("lastViewedPurchaseAt");
+  if (savedLastViewed) {
+    setLastViewedPurchaseAt(savedLastViewed);
+  }
+
+  void loadAllData();
+}, []);
 
   useEffect(() => {
     if (!mounted) return;
@@ -671,7 +677,7 @@ useEffect(() => {
     .channel("admin-bookings-realtime")
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "bookings" },
+      { event: "INSERT", schema: "public", table: "bookings" },
       () => {
         void loadPurchaseHistory();
       }
@@ -681,7 +687,7 @@ useEffect(() => {
   return () => {
     void supabase.removeChannel(channel);
   };
-}, [lastViewedPurchaseAt]);
+}, []);
 
 useEffect(() => {
   if (!toast) return;
@@ -705,13 +711,10 @@ async function loadAllData() {
 }
 
 function markPurchaseHistoryAsViewed(items: PurchaseHistoryItem[]) {
-  if (items.length === 0) {
-    setNewPurchaseCount(0);
-    return;
-  }
+  const latestDate = items[0]?.created_at || new Date().toISOString();
 
-  const latestDate = items[0]?.created_at || "";
   setLastViewedPurchaseAt(latestDate);
+  localStorage.setItem("lastViewedPurchaseAt", latestDate);
   setNewPurchaseCount(0);
 }
 
@@ -1032,19 +1035,22 @@ async function loadPurchaseHistory() {
 
     if (error) throw error;
 
-    const items = (data ?? []) as unknown as PurchaseHistoryItem[];
+    const items = (data ?? []) as PurchaseHistoryItem[];
     setPurchaseHistory(items);
     setPurchaseHistoryLoadFailed(false);
 
-    if (!lastViewedPurchaseAt) {
-      setNewPurchaseCount(items.length);
+    const savedLastViewed =
+      lastViewedPurchaseAt || localStorage.getItem("lastViewedPurchaseAt") || "";
+
+    if (!savedLastViewed) {
+      setNewPurchaseCount(0);
       return;
     }
 
     const unseenCount = items.filter(
       (item) =>
         item.created_at &&
-        new Date(item.created_at).getTime() > new Date(lastViewedPurchaseAt).getTime()
+        new Date(item.created_at).getTime() > new Date(savedLastViewed).getTime()
     ).length;
 
     setNewPurchaseCount(unseenCount);
