@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Cormorant_Garamond } from "next/font/google";
 
@@ -26,6 +26,9 @@ const navLinks: NavLink[] = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const isHome = pathname === "/";
+  const links = useMemo(() => navLinks, []);
+
   const [activeHref, setActiveHref] = useState(pathname);
   const [isShrunk, setIsShrunk] = useState(false);
   const [underline, setUnderline] = useState({
@@ -35,10 +38,6 @@ export default function Navbar() {
   });
 
   const navRef = useRef<HTMLDivElement | null>(null);
-  const linkRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
-
-  const isHome = pathname === "/";
-  const links = useMemo(() => navLinks, []);
 
   useEffect(() => {
     setActiveHref(pathname);
@@ -49,8 +48,8 @@ export default function Navbar() {
       setIsShrunk(window.scrollY > 40);
     };
 
-    window.addEventListener("scroll", handleScroll);
     handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -58,7 +57,7 @@ export default function Navbar() {
   useEffect(() => {
     if (!isHome) return;
 
-    const sections = navLinks
+    const sections = links
       .filter((link) => link.sectionId)
       .map((link) => document.getElementById(link.sectionId!))
       .filter(Boolean) as HTMLElement[];
@@ -73,45 +72,58 @@ export default function Navbar() {
         if (pos >= section.offsetTop) current = section;
       }
 
-      const match = navLinks.find((link) => link.sectionId === current.id);
+      const match = links.find((link) => link.sectionId === current.id);
       if (match) setActiveHref(match.href);
     };
 
-    window.addEventListener("scroll", detect);
     detect();
+    window.addEventListener("scroll", detect, { passive: true });
 
     return () => window.removeEventListener("scroll", detect);
-  }, [isHome]);
+  }, [isHome, links]);
+
+  const updateUnderline = () => {
+    const nav = navRef.current;
+    if (!nav) return;
+
+    const activeEl = nav.querySelector(
+      `[data-nav-link="${activeHref}"]`
+    ) as HTMLElement | null;
+
+    if (!activeEl) {
+      setUnderline((prev) => ({ ...prev, opacity: 0 }));
+      return;
+    }
+
+    const navRect = nav.getBoundingClientRect();
+    const rect = activeEl.getBoundingClientRect();
+
+    const width = rect.width * 0.72;
+    const left = rect.left - navRect.left + (rect.width - width) / 2;
+
+    setUnderline({
+      left,
+      width,
+      opacity: 1,
+    });
+  };
+
+  useLayoutEffect(() => {
+    const raf = requestAnimationFrame(updateUnderline);
+    return () => cancelAnimationFrame(raf);
+  }, [activeHref, pathname, isShrunk]);
 
   useEffect(() => {
-    const updateUnderline = () => {
-      const el = linkRefs.current[activeHref];
-      const nav = navRef.current;
+    const handleResize = () => updateUnderline();
 
-      if (!el || !nav) {
-        setUnderline((prev) => ({ ...prev, opacity: 0 }));
-        return;
-      }
+    window.addEventListener("resize", handleResize);
 
-      const navRect = nav.getBoundingClientRect();
-      const rect = el.getBoundingClientRect();
+    if ("fonts" in document) {
+      document.fonts.ready.then(() => updateUnderline());
+    }
 
-      setUnderline({
-        left: rect.left - navRect.left + rect.width * 0.05,
-        width: rect.width * 0.9,
-        opacity: 1,
-      });
-    };
-
-    const raf = requestAnimationFrame(updateUnderline);
-
-    window.addEventListener("resize", updateUnderline);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", updateUnderline);
-    };
-  }, [activeHref, isShrunk]);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [activeHref]);
 
   return (
     <header
@@ -138,20 +150,19 @@ export default function Navbar() {
 
               return (
                 <Link
-                      key={link.href}
-                      href={link.href}
-                      prefetch={true}
-                      ref={(el) => {
-                        linkRefs.current[link.href] = el;
-                      }}
-                      className={`${font.className} relative pb-2 italic tracking-wide transition-all duration-500 ease-out ${
-                        isShrunk
-                          ? "text-[1.1rem] sm:text-[1.55rem]"
-                          : "text-[1.25rem] sm:text-[1.85rem]"
-                      }`}
-                    >
+                  key={link.href}
+                  href={link.href}
+                  prefetch
+                  onClick={() => setActiveHref(link.href)}
+                  data-nav-link={link.href}
+                  className={`${font.className} relative pb-3 italic tracking-wide transition-all duration-300 ease-out ${
+                    isShrunk
+                      ? "text-[1.1rem] sm:text-[1.55rem]"
+                      : "text-[1.25rem] sm:text-[1.85rem]"
+                  }`}
+                >
                   <span
-                    className={`transition duration-300 ${
+                    className={`transition-colors duration-300 ${
                       isActive ? "text-white" : "text-gray-400 hover:text-white"
                     }`}
                   >
@@ -162,7 +173,7 @@ export default function Navbar() {
             })}
 
             <span
-              className="pointer-events-none absolute bottom-0 h-[2.5px] rounded-full bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.6)] transition-all duration-300 ease-out"
+              className="pointer-events-none absolute bottom-0 h-[3px] rounded-full bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.6)] transition-all duration-300 ease-out"
               style={{
                 left: `${underline.left}px`,
                 width: `${underline.width}px`,
